@@ -1041,4 +1041,4 @@ SiPi/
 - Publicacion directa de sitios generados a internet (hosting con un clic).
 - Modulos/importaciones entre archivos `.sipi`.
 
-— NovaLab Corporation
+— Epsilius Oficial
