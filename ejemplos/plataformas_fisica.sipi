@@ -1,0 +1,27 @@
+programa "Juego de plataformas con fisica real"
+
+funcion tocar_moneda()
+    sumar puntaje 10
+    decir "Moneda recolectada! Puntaje: {puntaje}"
+fin
+
+crear_juego "SiPi - Plataformas con Fisica" 640 480
+    tamano_mundo 1600 480
+    sprite jugador 100 400 40 40 "cian"
+    sprite moneda1 500 420 20 20 "amarillo"
+    sprite moneda2 900 420 20 20 "amarillo"
+    sprite moneda3 1300 420 20 20 "amarillo"
+
+    velocidad 5
+    gravedad 0.8
+    rebote 0.3
+    friccion 0.1
+    camara_seguir jugador
+
+    puntaje_inicial 0
+    mostrar_puntaje
+
+    chocar jugador moneda1 tocar_moneda()
+    chocar jugador moneda2 tocar_moneda()
+    chocar jugador moneda3 tocar_moneda()
+fin

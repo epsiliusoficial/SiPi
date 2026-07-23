@@ -1,0 +1,21 @@
+programa "Ventana con pestanias y menu desplegable"
+
+funcion guardar_perfil()
+    decir "Perfil guardado: {campo_nombre}, pais: {pais_elegido}"
+fin
+
+ventana "SiPi - Panel con pestanias" 450 380
+    pestanias 20 20 400 300
+        pestana "Perfil"
+            etiqueta "Nombre:" 20 20
+            entrada campo_nombre 100 18
+            etiqueta "Pais:" 20 60
+            menu_desplegable 100 58 20 "Argentina|Chile|Uruguay|Mexico" -> pais_elegido
+            boton "Guardar" 20 100 guardar_perfil()
+        fin
+        pestana "Configuracion"
+            etiqueta "Ajustes de la aplicacion" 20 20
+            casilla "Notificaciones activadas" 20 60 notificaciones
+        fin
+    fin
+fin

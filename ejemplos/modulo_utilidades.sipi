@@ -1,0 +1,15 @@
+// Modulo con funciones utiles reutilizables
+
+funcion es_par(numero)
+    variable resto_division = numero
+    si resto_division == 0
+        devolver verdadero
+    fin
+    devolver falso
+fin
+
+funcion saludar_desde_modulo(nombre)
+    decir "Hola {nombre}, este saludo viene de un modulo importado."
+fin
+
+variable version_modulo = "1.0"
