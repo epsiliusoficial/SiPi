@@ -1,1486 +1,191 @@
-# SiPi v40.0.0
+# SiPi
 
-## Novedades de la version 40.0 — #22 de la lista: POO real, y 3 bugs serios corregidos
+![version](https://img.shields.io/badge/versi%C3%B3n-41.24.0-blue)
+![licencia](https://img.shields.io/badge/licencia-propietaria%20(todos%20los%20derechos%20reservados)-red)
+![python](https://img.shields.io/badge/python-3.10%2B-blue)
+![estado](https://img.shields.io/badge/estado-en%20desarrollo%20activo-brightgreen)
 
-### Sistema 1 — Programacion orientada a objetos real
-Nuevos comandos: `clase Nombre [hereda_de Padre] ... fin` (con campos
-por defecto y `metodo nombre(params) ... fin` adentro), `nuevo
-Clase(args) -> variable` (instancia y llama automaticamente a
-`constructor` si existe), `llamar_metodo objeto "nombre"(args) ->
-variable`, y `es_instancia_de objeto Clase -> variable`. Dentro de un
-metodo, el objeto esta disponible como la variable implicita `este`
-(como `self`/`this`), y como los objetos son diccionarios de Python
-reales, `diccionario_asignar este "campo" valor` modifica el objeto de
-verdad, no una copia. Soporta herencia real con sobreescritura de
-metodos (polimorfismo): probado con `Animal -> Perro/Gato`, cada uno
-con su propio `hacer_sonido()`, llamado a traves de un metodo heredado
-`describir()` definido solo en la clase base.
+> Los badges de ⭐ estrellas e issues se agregan solos apenas el repo esté en GitHub — reemplazá `TU_USUARIO/TU_REPO` más abajo por la ruta real:
+> `![stars](https://img.shields.io/github/stars/TU_USUARIO/TU_REPO?style=social)` · `![issues](https://img.shields.io/github/issues/TU_USUARIO/TU_REPO)`
 
-### Refactor que previene bugs futuros de este mismo tipo
-Habia mas de 14 copias pegadas de la misma lista de "palabras que abren
-un bloque" repartidas por todo el archivo (la causa raiz de que
-`pagina_web`/`formulario` se hubieran desincronizado del formateador en
-una version anterior). Se unificaron todas en una sola constante
-(`BLOQUES_QUE_ABREN`), usada tambien por el formateador de codigo.
+**Un lenguaje de programación en español, pensado para que alguien sin experiencia previa pueda crear programas de verdad — interfaces gráficas, juegos, páginas web, bases de datos — sin pelearse primero con sintaxis en inglés ni configuración.**
 
-### Bug encontrado al agregar clases: un campo llamado 'clase' rompia el conteo de bloques
-Al agregar `clase` como palabra reservada, se rompio cualquier programa
-que ya tuviera un campo o variable llamado literalmente `clase` (muy
-comun, ej. `estructura Personaje` con un campo `clase = 0`), porque el
-detector de bloques confundia esa asignacion con la apertura de un
-bloque real. Corregido: una linea tipo `palabra = valor` nunca se
-cuenta como apertura de bloque, aunque 'palabra' coincida con una
-palabra reservada. Se agrego una prueba automatizada especifica para
-este caso.
+```sipi
+programa "Mi Primer Programa"
 
-### Bug serio encontrado: concatenar texto con numeros fallaba en silencio
-`"Puntaje: " + puntaje` (texto + numero) tiraba un `TypeError` de
-Python por dentro y se devolvia el texto crudo sin evaluar - uno de los
-patrones mas comunes que escribe cualquier persona. Corregido con un
-evaluador de expresiones propio (basado en el modulo `ast`) que
-convierte numeros a texto al concatenar con `+`, como se espera en un
-lenguaje pensado para principiantes.
+variable nombre = "Mateo"
+decir "Hola, {nombre}! Esto es SiPi funcionando de verdad."
 
-### Bug de fondo mas serio encontrado esta ronda: la sustitucion de variables corrompia texto dentro de strings
-Al arreglar el bug anterior aparecio uno mas profundo, presente desde
-siempre: la sustitucion de nombres de variable por su valor se hacia
-con una unica pasada de regex sobre TODA la expresion, sin distinguir
-que partes eran codigo y cuales eran texto literal. Resultado: si un
-string literal contenia una palabra que tambien era el nombre de una
-variable (ej. la variable `vida` y el texto `" de vida"`), esa palabra
-DENTRO del texto se reemplazaba por el valor de la variable
-(`"Rex tiene 100 de vida"` se convertia en `"Rex tiene 100 de 100"`).
-Corregido haciendo que la sustitucion respete los limites de los
-strings literales (comillas), igual que ya hacia el buscador de
-llamadas a funciones. Se agregaron pruebas automatizadas para los tres
-bugs de esta ronda; la bateria completa paso de 14 a 17 pruebas.
-
-
-
-## Novedades de la version 39.0 — Bug reportado corregido + #20 de la lista: pruebas automatizadas
-
-### Bug reportado y corregido: el formateador de codigo no indentaba bien `pagina_web`/`formulario`
-Revisando el area de `sipi.py` que reportaste (cerca de las lineas
-3460 y 3487, la funcion `formatear_codigo` y sus tablas de palabras
-clave), se encontro que `PALABRAS_APERTURA_BLOQUE` -la lista que usa
-`--formatear` para saber que comandos abren un bloque y necesitan
-indentar lo que sigue- **no incluia `pagina_web` ni `formulario`**,
-aunque en el resto del interprete (`_encontrar_fin`, en 15 lugares
-distintos) si se los trata como bloques reales. Resultado: formatear un
-programa con paginas web o formularios dejaba todo el contenido al
-mismo nivel de indentacion, sin importar cuantos bloques anidados
-tuviera. Se confirmo que el bug ya estaba presente en la v29 original.
-Corregido agregando esas dos palabras a la lista; probado con un
-`pagina_web` que contiene un `formulario` anidado y ahora indenta
-correctamente en 2 niveles.
-
-### Pruebas automatizadas reales (`sipi test`)
-Nuevo `tests/test_suite.py` (solo libreria estandar, sin dependencias
-externas) con 14 pruebas automatizadas que ejecutan programas `.sipi`
-reales contra el motor real y comparan la salida, cubriendo los bugs
-mas importantes corregidos a lo largo de todas las versiones:
-recursion profunda, llamadas a funciones dentro de expresiones
-(anidadas incluso), concatenacion de texto de tres partes, division
-por cero, variables no declaradas, `romper`/`continuar` (incluyendo el
-caso de que no se escapen de una funcion sin bucle propio), errores
-propios con `lanzar_error`, constantes, programacion funcional sobre
-listas, el formateador de `pagina_web`/`formulario`, y SQLite real.
-
-Se puede correr con:
-```
-sipi test
-```
-o directamente `python3 tests/test_suite.py`. Sirve como red de
-seguridad real: si un cambio futuro reintroduce alguno de estos bugs ya
-solucionados, estos tests lo van a detectar en segundos en vez de que
-alguien lo encuentre por casualidad meses despues. `publicar.py` ahora
-tambien incluye la carpeta `tests/` en las distribuciones.
-
-
-
-## Novedades de la version 38.0 — #10 y #11 de la lista: modo principiante y documentacion interactiva
-
-### Bug real encontrado (al escribir el tutorial): las comillas no se pueden escapar dentro de un texto
-Al escribir el tutorial interactivo se encontro que `\"` dentro de un
-string no funciona como escape: SiPi lo deja tal cual (con la barra
-invertida incluida) en vez de interpretarlo como una comilla literal.
-Es una limitacion real del tokenizador de strings actual. Se documento
-en `DOCUMENTACION.md` con la solucion practica (usar comillas simples
-`'` para el texto anidado) para que nadie mas pierda tiempo con esto.
-
-### Documentacion interactiva (`ayuda`)
-Nuevo comando del lenguaje `ayuda "nombre_comando"`, usable desde
-cualquier programa `.sipi`, con resumen + ejemplo real para ~35 de los
-comandos mas usados (variables, condicionales, bucles, funciones,
-listas, SQLite, API web, modulos, etc.), con sugerencia automatica de
-comandos parecidos si hay un typo. `ayuda` sin argumentos lista los
-comandos con ficha disponible.
-
-Tambien desde la terminal:
-```
-sipi ayuda mostrar sqlite_conectar
-sipi ayuda buscar sqlite
-```
-
-### Modo principiante (`modo_principiante`)
-Nuevo comando `modo_principiante`: cuando esta activo, si el programa
-falla con alguno de los errores mas comunes para quien recien empieza
-(variable no declarada, division por cero, comando desconocido, falta
-un `fin`, funcion no definida, modificar una constante), SiPi agrega un
-consejo en lenguaje simple explicando como solucionarlo, ademas del
-mensaje de error tecnico. Sin `modo_principiante` activado, el
-comportamiento no cambia (para no ser repetitivo con usuarios
-avanzados).
-
-### Tutorial interactivo (`sipi tutorial`)
-Nuevo `ejemplos/tutorial_interactivo.sipi` y subcomando `sipi tutorial`:
-un recorrido guiado y realmente ejecutable por variables, operaciones,
-condicionales, bucles, funciones, listas y manejo de errores, con
-`modo_principiante` activado. Pensado como primer contacto con SiPi
-antes de leer `DOCUMENTACION.md`.
-
-
-
-## Novedades de la version 37.0 — #7 y #8 de la lista: CLI profesional y proyectos estructurados
-
-Nuevo `sipi_cli.py` (con `sipi_cli.bat` para Windows), una interfaz de
-linea de comandos real con subcomandos, en vez de tener que recordar
-que archivo `.py`/`.bat` corresponde a cada tarea:
-
-```
-sipi ejecutar archivo.sipi      Ejecuta un programa SiPi
-sipi crear nombre_proyecto      Crea un proyecto nuevo con estructura estandar
-sipi compilar archivo.sipi      Compila un programa a un ejecutable .exe
-sipi instalar nombre_o_url      Instala un modulo .sipi
-sipi instalar --dependencias    Instala todo lo declarado en sipi_paquetes.json
-sipi publicar                   Genera la carpeta PUBLICACION/ lista para distribuir
-sipi ayuda                      Muestra la ayuda
-```
-
-- `sipi crear` arma un proyecto con estructura estandar
-  (`main.sipi`, `ejemplos/`, `modulos_instalados/`, `sipi_paquetes.json`,
-  `README.md`), en vez de tener que armar las carpetas a mano.
-- Los demas subcomandos son una capa fina sobre lo que ya existia
-  (`sipi.py`/`sipi_protegido.py`, `generar_exe.py`, `_instalar_modulo`,
-  `publicar.py`), reutilizando la logica real en vez de duplicarla, y
-  ya distinguen automaticamente entre carpeta de desarrollo y carpeta
-  publicada (protegida).
-- `publicar.py` ahora tambien incluye `sipi_cli.py`/`sipi_cli.bat` en la
-  carpeta `PUBLICACION/`, asi que el CLI queda disponible para quien
-  reciba tu proyecto ya compilado/protegido, no solo en desarrollo.
-
-Se probaron los 6 subcomandos de punta a punta: crear un proyecto nuevo
-y ejecutarlo, instalar un modulo real desde un servidor HTTP (tanto
-suelto como via `sipi_paquetes.json`), compilar (llega correctamente a
-PyInstaller), publicar, y ayuda — incluyendo la verificacion de que
-`sipi ejecutar`/`sipi ayuda` funcionan igual dentro de una carpeta ya
-publicada (usando `sipi_protegido.py`).
-
-
-
-## Novedades de la version 36.0 — #6 de la lista: depurador visual corregido y completado
-
-El depurador visual (`VentanaDepurador`, con breakpoints, paso a paso y
-panel de variables) ya existia, pero al revisarlo a fondo se
-encontraron y corrigieron dos bugs reales, ademas de completar una
-funcionalidad que faltaba:
-
-### Bug critico: el boton "⏹ Detener" no detenia nada si el programa estaba dentro de una funcion
-El mecanismo para cortar la ejecucion usaba la misma excepcion que
-`devolver` (`RetornoFuncion`). Si el usuario apretaba "Detener" mientras
-el programa estaba corriendo *dentro de una llamada a funcion* (el caso
-mas comun en cualquier programa real), esa funcion atrapaba la señal de
-corte como si fuera un simple `devolver` y **el programa seguia
-corriendo hasta el final**, ignorando el boton. Se probo especificamente
-este escenario (breakpoint dentro del bucle de una funcion) y se
-confirmo que el hilo de ejecucion seguia vivo despues de apretar
-"Detener". Se corrigio agregando una excepcion dedicada
-(`DepuracionDetenida`) que ninguna llamada a funcion puede confundir con
-un retorno normal. Vuelto a probar: ahora el hilo termina de verdad en
-cuanto se aprieta "Detener", incluso en medio de una funcion.
-
-### Bug menor: el mensaje final decia "terminado correctamente" aunque el usuario lo hubiera detenido a mano
-Corregido para que, si el usuario detuvo la sesion, el mensaje final
-diga "Sesion de depuracion detenida por el usuario" en vez de sugerir
-que el programa termino solo.
-
-### Completado: variables locales en el panel "Variables en vivo"
-Antes el panel solo mostraba variables globales; dentro de una funcion
-aparecia vacio o incompleto aunque la funcion tuviera sus propias
-variables. Ahora se muestran por separado "Variables locales (funcion
-actual)" y "Variables globales". Probado deteniendose dentro de una
-funcion con parametro `n` y variable local `i`: ambas aparecen
-correctamente en el panel.
-
-Todo lo anterior se probo de punta a punta con un display virtual
-(Xvfb) simulando la interaccion real del usuario con la ventana del
-depurador (breakpoints, paso a paso, continuar, detener).
-
-
-
-## Novedades de la version 35.0 — #4 y #5 de la lista: autocompletado y resaltado de sintaxis real
-
-### Bug de documentacion encontrado y corregido
-`DOCUMENTACION.md` (agregada en la v32.1) decia que los comentarios se
-escriben con `#`. Es incorrecto: SiPi usa `//` para comentarios de una
-linea y `/* ... */` para comentarios de bloque (`#` ni siquiera es un
-comando valido, tira error). Se probo explicitamente y se corrigio la
-documentacion.
-
-### Bug real encontrado en el editor: el resaltado de sintaxis estaba desactualizado
-El editor tenia una lista de palabras clave (`PALABRAS_CLAVE`) copiada a
-mano, separada de la lista real de comandos del interprete
-(`COMANDOS_CONOCIDOS` en `sipi.py`). Con el tiempo se desincronizaron:
-**26 comandos reales** (`romper`, `continuar`, todos los de
-`sqlite_*`, `escuchar_ruta`, `iniciar_api_web`, `tipo_de`,
-`lanzar_error`, `instalar_modulo`, `listar_modulos`, los `lista_*`
-funcionales, etc.) nunca se coloreaban en el editor porque no estaban en
-esa lista vieja.
-
-**Corregido de raiz, no solo parchado**: el editor ahora carga
-`PALABRAS_CLAVE` dinamicamente desde `COMANDOS_CONOCIDOS` del motor real
-(via `_cargar_motor_sipi`, que ya distingue entre `sipi.py` y
-`sipi_protegido.py`), asi que el resaltado de sintaxis nunca puede
-volver a desactualizarse cuando se agregue un comando nuevo. Se dejo una
-lista de respaldo fija por si el motor no se puede cargar. Verificado:
-`sqlite_conectar`, `romper` y `tipo_de` ahora se resaltan correctamente,
-y la lista completa paso de 151 a 178 comandos reconocidos.
-
-### Autocompletado real (nuevo)
-El editor ahora muestra un menu de autocompletado mientras se escribe
-(a partir de 2 caracteres), con sugerencias de:
-- Comandos del lenguaje (los mismos 178, siempre sincronizados).
-- Variables declaradas en el programa actual (detectadas leyendo el
-  codigo: `variable`/`var`/`const`).
-- Funciones definidas en el programa actual (`funcion nombre(...)`).
-
-Se navega con las flechas ↑/↓, se acepta con Tab o Enter, y se cierra
-con Escape. Probado de punta a punta bajo un display virtual (Xvfb):
-escribir "repe" y aceptar con Tab completa a "repetir"; escribir "res"
-con una variable "resultado" ya declarada la sugiere junto a los
-comandos "restar" y "responder_json".
-
-
-
-## Novedades de la version 34.0 — #3 de la lista: mejor manejo de errores
-
-### Bug de fondo encontrado y corregido: typos en variables pasaban totalmente desapercibidos
-Se encontro que usar una variable no declarada (por un typo, por
-ejemplo `nombree` en vez de `nombre`) **nunca daba error**: tanto dentro
-de interpolacion de texto (`decir "Hola {nombree}"`) como en una
-expresion suelta (`variable r = nombree_que_no_existe`), SiPi
-silenciosamente imprimia el NOMBRE de la variable como si fuera un
-texto literal, en vez de avisar que no existia. Esto podia esconder
-bugs reales por mucho tiempo, porque el programa "corria" sin
-quejarse y mostraba datos incorrectos en vez de fallar.
-
-**Corregido**: ahora usar una variable no declarada da un error claro:
-```
-[SiPi] ERROR: Variable no declarada: 'nombree'. ¿Quisiste decir 'nombre'?
-```
-Si hay una variable o funcion parecida definida en el programa, SiPi la
-sugiere automaticamente (usando la misma logica de sugerencias que ya
-existia para comandos mal escritos). Si no hay ninguna parecida, sugiere
-como declararla.
-
-### División por cero con mensaje claro
-Antes, dividir por cero tambien caia en el mismo camino silencioso y
-devolvia texto sin evaluar. Ahora da un mensaje directo:
-```
-[SiPi] ERROR: Division por cero al evaluar la expresion 'a / b'.
-```
-
-### Compatibilidad verificada
-Se corrio toda la bateria de ejemplos incluidos (mas de 12 programas
-distintos: agenda, automatizacion, sitio web, formularios, JSON/CSV,
-modulos, listas de tareas, manejo de errores, etc.) para confirmar que
-este cambio, al ser mas estricto, no rompe ningun programa existente
-que ya declaraba bien sus variables.
-
-
-
-## Novedades de la version 33.0 — Otro bug critico corregido + paquetes con dependencias
-
-### Bug critico encontrado y corregido: concatenacion de texto rota desde siempre
-Se encontro (probando el sistema de modulos con una funcion tipica de
-saludo) que **cualquier concatenacion de la forma `"texto" + variable +
-"texto"` estaba rota desde la v29**: como la expresion completa empieza
-y termina con comillas, el evaluador la confundia con un unico string
-literal y devolvia el texto crudo sin evaluar, por ejemplo:
-```
-devolver "Hola " + nombre + " desde aca!"
-```
-imprimia literalmente `Hola " + nombre + " desde aca!` en vez de
-`Hola Mateo desde aca!`. Se confirmo que el bug ya estaba presente en la
-v29 original (no fue introducido por cambios recientes). **Corregido de
-raiz**: ahora se verifica que la comilla de apertura realmente cierre
-justo al final de la expresion (no solo que el primer y ultimo caracter
-sean comillas) antes de tratarla como un literal simple.
-
-### Bug corregido: `editor_protegido.py` buscaba `sipi.py` en vez de `sipi_protegido.py`
-Reportado directamente: al generar `editor_protegido.py` con
-`proteger_codigo.py`/`publicar.py`, los botones "▶ Ejecutar", "Compilar
-a .exe", la vista previa en vivo, el formateador de codigo y el
-depurador visual tenian la ruta al motor fija a `sipi.py` (en 2 casos,
-con un `import sipi` directo), que no existe en una carpeta ya
-publicada (solo existe `sipi_protegido.py`). Se agregaron
-`_ruta_motor_sipi()` / `_ruta_generar_exe()` / `_cargar_motor_sipi()`
-que resuelven el archivo correcto segun la carpeta, y se verifico
-generando una `PUBLICACION/` real y confirmando que el editor protegido
-carga el motor protegido sin error.
-
-### Sistema de paquetes mas solido (parte del pedido de la lista)
-- `listar_modulos` — lista los modulos ya instalados (con su origen y
-  fecha de instalacion), o los guarda en una variable con
-  `listar_modulos -> variable`.
-- `desinstalar_modulo "nombre"` — elimina un modulo instalado y lo saca
-  del registro.
-- `instalar_dependencias` — lee un manifiesto `sipi_paquetes.json` (el
-  equivalente de un `package.json`/`requirements.txt` para SiPi) con
-  formato `{"modulos": {"nombre": "url_o_nombre"}}`, e instala
-  automaticamente todas las dependencias declaradas del proyecto en una
-  sola instruccion, sin tener que escribir un `instalar_modulo` por
-  cada una. Probado de punta a punta con un servidor HTTP local real
-  sirviendo un modulo `.sipi`, incluyendo el manejo de errores cuando
-  una dependencia no se puede descargar (sigue con las demas y avisa
-  cuales fallaron al final).
-
-
-
-## Novedades de la version 32.2 — Bug corregido: `editor_protegido.py` buscaba `sipi.py` en vez de `sipi_protegido.py`
-
-### El bug (reportado directamente)
-Al usar `proteger_codigo.py` (o `publicar.py`), se generaba
-`editor_protegido.py` correctamente, pero al abrirlo en una carpeta
-publicada (donde solo existe `sipi_protegido.py`, sin el `sipi.py`
-original) el editor fallaba: los botones "▶ Ejecutar", "Compilar a
-.exe", la vista previa en vivo, el formateador de codigo y el depurador
-visual paso a paso tenian la ruta al motor **fija a `sipi.py`** (y en un
-caso, un `import sipi` directo por nombre de modulo), asi que no
-encontraban nada en una carpeta publicada.
-
-### La correccion
-- Se agrego `_ruta_motor_sipi()` / `_ruta_generar_exe()`: resuelven el
-  archivo correcto (`sipi.py`/`generar_exe.py` en desarrollo,
-  `sipi_protegido.py`/`generar_exe_protegido.py` en una carpeta
-  publicada) y se usan en la vista previa en vivo, en "▶ Ejecutar" y en
-  "Compilar a .exe".
-- Se agrego `_cargar_motor_sipi()`: importa el motor con
-  `importlib.util` bajo un nombre de modulo interno consistente, en vez
-  de depender de `import sipi` (que fallaba con
-  `ModuleNotFoundError: No module named 'sipi'` en cualquier carpeta
-  donde el archivo se llamara `sipi_protegido.py`). Se uso en el
-  formateador de codigo y en el depurador visual paso a paso.
-- **Verificado especificamente el escenario del bug**: se genero
-  `PUBLICACION/` con `publicar.py`, se copio a una carpeta limpia sin
-  `sipi.py`, y se confirmo que `editor_protegido.py` ahora encuentra y
-  carga `sipi_protegido.py` correctamente (antes de la correccion,
-  esto fallaba porque en esa carpeta no existe ningun archivo llamado
-  `sipi.py`).
-
-
-
-## Novedades de la version 32.1 — Documentacion oficial completa
-
-Se agrego `DOCUMENTACION.md`: guia de instalacion, tutorial desde cero
-(hola mundo -> variables -> condicionales -> bucles -> funciones y
-recursion -> listas/programacion funcional -> manejo de errores), guia
-de sintaxis, referencia completa de comandos organizada por categoria
-(control de flujo, listas/diccionarios/matrices, texto, numeros,
-archivos/SQLite, web/API, GUI de escritorio, juegos 2D, sistema), y
-ejemplos por nivel apuntando a la carpeta `ejemplos/`. Todo el contenido
-del tutorial fue probado linea por linea en esta misma sesion antes de
-documentarlo.
-
-
-
-## Novedades de la version 32.0 — Bug critico corregido: llamadas a funciones dentro de expresiones
-
-### El bug mas importante encontrado hasta ahora
-Se encontro (probando recursion real) que **llamar a una funcion dentro de
-una expresion nunca funciono**: cosas tan basicas como
-
-```
-variable r = doble(5)
-```
-o
-```
-variable r = contar_hasta(n - 1)
-devolver r + 1
-```
-
-no lanzaban un error: simplemente devolvian el TEXTO sin evaluar
-("doble(5)") en vez del resultado real, porque el evaluador de
-expresiones no sabia reconocer una llamada a funcion embebida — solo
-funcionaba `llamar_valor funcion(args) -> variable` como instruccion
-separada. Esto rompia en silencio cualquier funcion recursiva real
-(fibonacci, factorial, recorridos, etc.) apenas se armaba con una
-expresion en vez de un `llamar_valor` explicito.
-
-**Corregido de raiz**: el evaluador de expresiones ahora reconoce
-llamadas a funciones SiPi definidas por el usuario en cualquier parte de
-una expresion — anidadas, combinadas con operadores, dentro de
-condiciones (`si`), dentro de interpolacion de texto (`"{funcion(x)}"`),
-etc. Probado con: `doble(5)`, `suma_uno(doble(3))` (anidada, da 7),
-`si es_mayor(edad)`, e interpolacion `"Hola {saludo(nombre)}"`.
-
-### Recursion real y profunda, sin segfaults
-Al arreglar el bug anterior, aparecio el siguiente problema real:
-la recursion profunda (miles de niveles) tiraba
-`maximum recursion depth exceeded` con Python. Ahora:
-- El programa corre en un hilo con una pila de sistema operativo de
-  512 MB y un limite de recursion de Python mucho mas alto, para que la
-  recursion real de SiPi pueda llegar bastante mas profundo sin
-  arriesgarse a un segfault (que es lo que pasaria si solo se subiera
-  `sys.setrecursionlimit` sin agrandar tambien la pila).
-- Probado con 5.000 y 20.000 niveles de recursion real sin fallar.
-- Si aun asi se llega al limite, el mensaje de error ahora es humano
-  ("la funcion se llamo a si misma demasiadas veces...") en vez de un
-  traceback de Python, y la pila de llamadas impresa se recorta a los
-  ultimos 12 niveles (con un aviso de cuantos mas hay) para no saturar
-  la pantalla con miles de lineas repetidas.
-
-
-
-## Novedades de la version 31.1 — Bugs reales de control de flujo + excepciones propias
-
-### Bug encontrado y corregido: 'romper'/'continuar' fuera de lugar
-Se encontraron y corrigieron DOS bugs relacionados al agregar mas pruebas
-sobre `romper`/`continuar` (introducidos en la v31.0):
-1. Usar `romper` o `continuar` fuera de cualquier bucle terminaba en un
-   **traceback crudo de Python** en vez de un error claro de SiPi. Ahora
-   se valida en el momento exacto y se informa con un mensaje entendible.
-2. Un `romper` (o `continuar`) ejecutado dentro de una funcion que NO
-   tiene su propio bucle, pero que fue llamada desde dentro de un bucle
-   del programa que la invoco, se **escapaba silenciosamente y rompia el
-   bucle del que llamaba** — un bug de aislamiento real, no cosmetico.
-   Se agrego un contador de profundidad de bucles (`profundidad_bucles`)
-   que se resetea al entrar a una funcion y se restaura al salir, para
-   que el control de flujo de una funcion nunca se filtre a quien la
-   llama. Probado especificamente con este escenario.
-
-### Excepciones propias reales: `lanzar_error`
-Nuevo comando `lanzar_error "mensaje"` para lanzar un error personalizado
-desde cualquier parte del programa (por ejemplo, validaciones dentro de
-una funcion), capturable con la sintaxis existente `intentar` /
-`capturar` (el mensaje queda disponible en la variable `error`). Antes
-solo los errores internos del interprete generaban un `SiPiError`; ahora
-el programador de SiPi puede definir sus propias reglas de validacion y
-lanzar errores propios de la misma manera, como en cualquier lenguaje
-grande (`throw`/`raise`).
-
-
-
-## Novedades de la version 31.0 — Control de flujo real, funcional, y mas velocidad
-
-### Bugs corregidos
-- Al agregar `romper`/`continuar` se detecto y corrigio un bug donde el
-  manejador generico de errores de `_ejecutar_bloque` envolvia esas
-  senales de control de flujo en un `SiPiError` vacio en vez de dejarlas
-  propagar hasta el bucle que las tiene que atrapar. Se agrego una
-  excepcion explicita para `RomperBucle`/`ContinuarBucle` antes del
-  `except Exception` generico.
-
-### Control de flujo real: `romper` y `continuar`
-Nuevos comandos `romper` (break) y `continuar` (continue), soportados
-dentro de `mientras`, `repetir` y `para_cada`. Antes no habia forma de
-cortar o saltear una iteracion sin reestructurar todo el bucle con
-condicionales anidados. Probado con casos que combinan ambos dentro del
-mismo bucle.
-
-### Programacion funcional real sobre listas
-Nuevos comandos que reciben el **nombre de una funcion SiPi** y la
-aplican de verdad sobre una lista (no son simulaciones, ejecutan la
-funcion definida por el usuario elemento por elemento):
-- `lista_mapear lista con funcion -> variable`
-- `lista_filtrar lista con funcion -> variable`
-- `lista_reducir lista con funcion desde valor_inicial -> variable`
-- `lista_unir lista "separador" -> variable`
-- `lista_aplanar lista -> variable`
-
-### Nuevas funciones de texto y utilidades
-- `texto_recortar` (trim de espacios), `texto_empieza_con`,
-  `texto_termina_con`, `texto_repetir`.
-- `tipo_de expresion -> variable`: inspeccion de tipos en tiempo de
-  ejecucion (`"texto"`, `"numero"`, `"lista"`, `"diccionario"`,
-  `"booleano"`).
-
-### Velocidad real (medida con benchmarks, no estimada)
-- **Cache de `_encontrar_fin`**: antes, cada vez que se llamaba a una
-  funcion que contiene un bucle o un `si`, el interprete volvia a
-  escanear linea por linea para encontrar el `fin` correspondiente.
-  Ahora ese resultado se memoiza (por identidad del bloque de lineas),
-  asi que una funcion llamada miles de veces solo escanea su estructura
-  una vez.
-- **Cache propia de patrones regex (`_m()`)**: las ~126 llamadas a
-  `re.match()` repartidas por todo el interprete (una por cada tipo de
-  instruccion) ahora pasan por una cache directa en un diccionario,
-  evitando el overhead de la cache interna de `re` (que hace un lookup
-  con lock en cada llamada) en el camino mas caliente del interprete.
-- **Resultado medido**: en un benchmark con una funcion de cuerpo largo
-  llamada 3.000 veces, el tiempo bajo de **3.30s a 2.95s en promedio
-  (~11-13% mas rapido)**, comparado directamente contra v29 corriendo el
-  mismo programa. En bucles simples sin llamadas a funciones la mejora
-  es marginal, porque el camino rapido de operaciones matematicas
-  agregado en v29 ya cubria ese caso.
-
-
-
-## Novedades de la version 30.0 — Ecosistema, datos reales y backend
-
-Esta version se enfoca en cerrar los bugs de publicacion/distribucion
-encontrados en v29 y en sumar tres sistemas nuevos pedidos para acercar
-SiPi al nivel de un lenguaje/plataforma "grande":
-
-### Bugs corregidos
-- **`editor.exe` / `editor_sipi.py` con `ModuleNotFoundError: tkinter`**:
-  ahora el import de tkinter esta protegido; si falta, se muestra un
-  mensaje claro con instrucciones por sistema operativo, en vez de un
-  traceback crudo.
-- **`generar_exe.py` filtraba el codigo fuente dentro del .exe**: ahora
-  usa automaticamente `sipi_protegido.py` (el motor ofuscado) si existe
-  en la carpeta, y solo cae de vuelta a `sipi.py` con un aviso explicito
-  si no se protegio el proyecto todavia.
-- **Los `.bat` de la carpeta de publicacion apuntaban a los `.py`
-  originales** (`sipi.py`, `editor_sipi.py`, `generar_exe.py`) que ya no
-  existen ahi: se creo `publicar.py` / `publicar.bat`, que arma una
-  carpeta `PUBLICACION/` limpia con los archivos protegidos y los `.bat`
-  ya corregidos para apuntar a ellos (`sipi_protegido.py`,
-  `editor_protegido.py`, `generar_exe_protegido.py`).
-- **No existia una estructura oficial de publicacion**: `PUBLICACION/`
-  ahora se genera siempre desde cero (se borra y se reconstruye), nunca
-  mezcla archivos de desarrollo con archivos de distribucion, y nunca
-  incluye `sipi.py`, `editor_sipi.py`, `generar_exe.py` ni
-  `proteger_codigo.py`.
-- **Verificacion de punta a punta**: se probo exactamente el escenario de
-  un usuario final descargando el proyecto y ejecutandolo en una carpeta
-  limpia y separada (simulando un `git clone`/descarga de ZIP), corriendo
-  `sipi_protegido.py` directamente contra los ejemplos y confirmando
-  salida identica a la version sin proteger.
-
-### Sistema 1 — Administrador de paquetes (`instalar_modulo`)
-Nuevo comando `instalar_modulo "nombre"` (o `instalar_modulo "https://.../modulo.sipi"`
-para instalar directo desde cualquier URL, por ejemplo un repo de GitHub de
-un tercero). Descarga real por HTTP el archivo `.sipi`, lo guarda en
-`modulos_instalados/` y queda listo para `importar "modulos_instalados/nombre.sipi"`.
-El registro por defecto se controla con la variable de entorno
-`SIPI_REGISTRO_MODULOS` — cualquier comunidad puede publicar su propio
-repositorio de modulos sin que SiPi tenga que cambiar.
-
-### Sistema 2 — Bases de datos reales (SQLite)
-Comandos nuevos: `sqlite_conectar "archivo.db" como db`,
-`sqlite_ejecutar db "SQL"`, `sqlite_consultar db "SELECT ..." en variable`
-(devuelve una lista de diccionarios reales) y `sqlite_cerrar db`. Usa el
-modulo `sqlite3` de la libreria estandar de Python: sin dependencias
-externas, con datos reales persistidos en disco.
-
-### Sistema 3 — API Web real (backend completo)
-Comandos nuevos: `escuchar_ruta "/api/ruta" con nombre_funcion` para
-registrar una ruta, e `iniciar_api_web puerto` para levantar un servidor
-HTTP real (con la libreria estandar `http.server`) que recibe peticiones
-GET/POST/PUT/DELETE desde cualquier lugar (apps moviles, webs externas,
-`curl`, etc.), las despacha a la funcion SiPi registrada pasandole un
-diccionario `peticion` (con `metodo`, `ruta`, `query` y `cuerpo` ya
-parseado si es JSON), y devuelve como respuesta JSON real lo que la
-funcion entregue con `devolver`. `detener_api_web` la apaga. Se probo con
-peticiones reales via `curl` contra rutas existentes e inexistentes
-(200 y 404 respectivamente).
-
-
-
-**SiPi** es una herramienta con lenguaje propio, muy simple de aprender pero
-muy abierta, para crear paginas web, aplicaciones, juegos, programas de
-escritorio y automatizaciones. Pensada para que la use cualquiera: un chico
-que arranca a programar, un profesional de cualquier carrera, una empresa
-grande, o quien necesite prototipar rapido algo serio. Todo lo que hace es
-**real y funcional** — no hay simulaciones, demos ni botones falsos.
-
-## Verificacion adicional realizada en esta ronda (con pantalla real Xvfb)
-
-Ademas de las pruebas de consola habituales, en esta ronda se instalo una
-pantalla virtual real (Xvfb) para poder ejecutar y verificar de principio
-a fin, con ventanas de verdad:
-
-- ✅ El **Editor Visual** abre correctamente sin errores.
-- ✅ El **Depurador visual** fue probado con un `mainloop()` real: se
-  confirmo que un breakpoint pausa la ejecucion en la linea exacta, que
-  cada clic en "Continuar" avanza una iteracion mostrando el valor real
-  de las variables (`0 -> 1 -> 2 -> 3 -> 4 -> 5`), y que sin breakpoints
-  "Continuar" corre el programa hasta el final, tal como se espera.
-- ✅ Los ejemplos con **ventanas graficas** (`calculadora_gui.sipi`,
-  `panel_con_pestanias.sipi`, `formulario_completo.sipi`,
-  `agenda_contactos.sipi`) abren sin errores.
-- ✅ Los ejemplos con **juegos de pygame** (`juego_simple.sipi`,
-  `plataformas_fisica.sipi`, `enemigos_ia_particulas.sipi`) corren sin
-  errores durante varios segundos reales de juego.
-- ✅ El **servidor web** generado por `iniciar_servidor_web` fue probado
-  con una peticion HTTP real (`curl`), confirmando una respuesta 200 con
-  el HTML correcto.
-- ✅ Se encontro y corrigio un **bug real de colisiones** (ver version
-  20.0): las colisiones se disparaban en cada cuadro mientras los sprites
-  seguian tocandose, en vez de una sola vez.
-
-## Novedades de la version 29.0 — Velocidad real y proteccion de codigo fuente
-
-- ✅ **Interprete mas rapido de verdad**: se identificaron los cuellos de
-  botella reales con un perfilador (`cProfile`) y se optimizaron. Un
-  benchmark de 50.000 iteraciones de un bucle con operaciones
-  matematicas paso de **1.264 segundos a 0.719 segundos** (~43% mas
-  rapido), con resultados identicos, verificado antes y despues del
-  cambio. Los cambios: patrones de expresiones regulares precompilados
-  (en vez de recompilarlos en cada linea), y un camino rapido para
-  operaciones matematicas simples (`a + b`, `x * 2`, etc.) que evita
-  pasar por el motor generico de evaluacion cuando no hace falta.
-- ✅ **Sistema real de proteccion/ofuscacion de codigo fuente**
-  (`proteger_codigo.py`, o el boton de un clic `proteger_codigo.bat`):
-  genera versiones de `sipi.py`, `editor_sipi.py` y `generar_exe.py` que
-  **no contienen codigo fuente legible** (compila a bytecode real de
-  Python, lo serializa y lo codifica), para poder subir o distribuir el
-  proyecto sin exponer el codigo, los nombres de variables ni los
-  comentarios internos. Se verifico que el archivo protegido ejecuta
-  **exactamente igual** que el original (mismos resultados en todos los
-  ejemplos probados), y que no contiene ningun nombre de funcion o clase
-  en texto plano.
-
-**Nota honesta sobre la proteccion de codigo**: esta tecnica (bytecode
-serializado y codificado) es la misma que usan muchas herramientas
-simples de proteccion de Python. Impide que alguien abra el archivo con
-un editor de texto y lea o copie tu codigo directamente. No es
-"irrompible" ante alguien con conocimientos avanzados de ingenieria
-inversa (ninguna proteccion de Python lo es), pero es una barrera real y
-efectiva para el uso normal de distribucion de un proyecto.
-
-## Novedades de la version 28.0 — Correccion profunda del ambito local (parte 2)
-
-Al agregar el ambito local de variables en la version 27, se detecto que
-la correccion habia quedado incompleta: solo `variable`, `sumar`, `restar`
-y `llamar_valor` respetaban el nuevo ambito, pero **decenas de comandos**
-que crean o leen variables (`lista_crear`, `lista_agregar`,
-`diccionario_crear`, `diccionario_asignar`, `matriz_crear`, `preguntar`,
-`leer_archivo`, `json_leer`, `csv_leer`, `hash_texto`, `azar_entre`, y
-practicamente cualquier comando con `-> variable`) seguian escribiendo
-directamente en el espacio global, sin pasar por el nuevo sistema de
-ambitos.
-
-- ✅ **Corregidos mas de 90 puntos del interprete** para que respeten el
-  ambito local de forma consistente. Se verifico con un caso muy exigente:
-  una funcion recursiva que crea un diccionario nuevo en cada llamada
-  (`diccionario_crear nodo`) — antes, todas las llamadas recursivas
-  terminaban compartiendo el mismo diccionario global sin darse cuenta,
-  dando resultados incorrectos silenciosamente. Ahora cada llamada tiene
-  su propio diccionario aislado, como corresponde.
-- ✅ Se mantuvo a proposito el comportamiento de "variable persistente
-  global" para los casos donde tiene sentido (acumuladores con
-  `sumar`/`restar`, el puntaje de los juegos, la posicion de los sprites,
-  y las variables ligadas a widgets de una ventana), para no romper
-  patrones como `sumar puntaje 1` dentro de una funcion de colision.
-- ✅ Nuevo ejemplo `estructuras_recursivas.sipi`: una lista y un arbol de
-  diccionarios construidos con recursion real, aislados correctamente por
-  llamada.
-
-**Nota honesta**: si escribiste programas en versiones anteriores que
-dependian (sin saberlo) del comportamiento anterior de variables
-compartidas entre llamadas recursivas para "acumular" datos de forma
-implicita, ese patron ya no funciona igual — ahora hay que pasar y
-devolver los datos explicitamente (como en el ejemplo de arriba), que es
-la forma correcta y esperada de trabajar con funciones en cualquier
-lenguaje de programacion.
-
-## Novedades de la version 27.0 — Correccion critica: la recursion no funcionaba
-
-Esta es la correccion mas importante de todas las realizadas hasta ahora.
-
-- ✅ **Corregido un bug arquitectonico grave: las funciones recursivas
-  daban resultados incorrectos**. `factorial(5)` devolvia `1` en vez de
-  `120`, y `fibonacci(10)` devolvia `1` en vez de `55`. La causa: SiPi no
-  tenia ambito local de variables — los parametros y las variables
-  declaradas dentro de una funcion vivian en un unico espacio global
-  compartido. Cuando una funcion se llamaba a si misma (recursion), la
-  llamada mas profunda pisaba los parametros y variables de las llamadas
-  anteriores, corrompiendo sus calculos silenciosamente. Peor aun, esto
-  tambien afectaba a llamadas normales (no recursivas): si el programa
-  principal tenia una variable con el mismo nombre que un parametro de
-  una funcion, se corrompia al llamarla.
-- ✅ **La solucion**: cada llamada a una funcion ahora tiene su propio
-  ambito local real (como en cualquier lenguaje de programacion serio).
-  Los parametros y las variables declaradas dentro de la funcion quedan
-  aislados de esa llamada especifica. Las variables que ya existian antes
-  de la llamada (como un contador global de puntaje) se siguen pudiendo
-  modificar normalmente con `sumar`/`restar`, para no romper patrones
-  como `sumar puntaje 1` dentro de una funcion de colision de un juego.
-- ✅ Se verifico exhaustivamente: `factorial(10) = 3628800`, los primeros
-  10 numeros de Fibonacci correctos, una variable global mutada
-  correctamente desde una funcion, y una variable del programa principal
-  que ya NO se corrompe al llamar una funcion con un parametro del mismo
-  nombre.
-- ✅ Nuevo ejemplo `funciones_recursivas.sipi`: factorial y Fibonacci
-  calculados correctamente del 1 al 10.
-
-**Como se encontro**: se probo el patron de programacion mas basico y
-universal que existe — una funcion recursiva — algo que cualquier persona
-aprendiendo a programar intenta hacer temprano. El resultado incorrecto
-(pero sin ningun error visible) revelo que faltaba una pieza fundamental
-del lenguaje.
-
-## Novedades de la version 26.0 — Sprites y mundos con posiciones dinamicas
-
-- ✅ **Corregido el mismo tipo de bug en `sprite` y `tamano_mundo`** dentro
-  de `crear_juego`: no aceptaban variables para la posicion, el tamaño o
-  el color de un sprite, solo numeros y texto literal. Esto rompia un
-  patron muy natural en juegos: generar enemigos en posiciones
-  **aleatorias** con `azar_entre` y pasarselas al sprite. Se confirmo con
-  una prueba directa que un sprite creado con variables (`sprite enemigo
-  px py 30 30 "rojo"`) toma exactamente los valores reales de esas
-  variables.
-- ✅ Nuevo ejemplo `sprites_posiciones_dinamicas.sipi`: un juego con dos
-  enemigos que aparecen en posiciones aleatorias distintas cada vez que
-  se ejecuta.
-
-## Novedades de la version 25.0 — Coordenadas dinamicas en todos los widgets
-
-- ✅ **Ultima ronda de esta serie de correcciones**: se generalizaron las
-  coordenadas y tamaños (`x`, `y`, `ancho`, `alto`) de **todos** los
-  widgets restantes (`imagen`, `casilla`, `barra_progreso`, `lista`,
-  `menu_desplegable`) para aceptar variables y expresiones, no solo
-  numeros literales. Se probo un caso integral con una ventana completa
-  donde todas las posiciones se calculan con variables
-  (`pos_x`, `pos_y`, `ancho_barra`), confirmando que cada widget se crea
-  en el lugar correcto y responde con los valores reales esperados.
-
-Con esta version, el motor de ventanas de SiPi acepta de forma consistente
-variables y expresiones en practicamente todos sus argumentos —
-texto, colores, posiciones y tamaños — en lugar de exigir literales fijos,
-que era una limitacion real que afectaba a cualquier interfaz un poco mas
-dinamica que un formulario estatico.
-
-## Novedades de la version 24.0 — Listas y menus con datos dinamicos reales
-
-- ✅ **Corregido el mismo tipo de bug en `lista` (listbox) y
-  `menu_desplegable`**: hasta ahora solo aceptaban un texto literal fijo
-  separado por `|` (`"Python|JavaScript|SiPi"`). Si querias mostrar el
-  contenido de una lista real de SiPi (por ejemplo, construida con
-  `lista_agregar` a partir de datos de un archivo o una base de datos),
-  no habia forma de conectarla al widget. Ahora ambos aceptan
-  directamente una lista de SiPi ademas de seguir aceptando el texto
-  literal con `|` de siempre:
-  `lista 20 40 35 6 tareas_pendientes -> tarea_elegida`
-- ✅ Nuevo ejemplo `lista_menu_dinamicos.sipi`: una lista de tareas y un
-  selector de pais, ambos construidos con datos reales en listas de SiPi
-  en vez de texto fijo.
-
-## Novedades de la version 23.0 — Bug importante: widgets dinamicos en bucles
-
-- ✅ **Corregido un bug real que rompia un patron muy comun**: crear
-  widgets (`etiqueta`, `boton`, `entrada`, `cuadro`) dentro de un
-  `para_cada` o `repetir`, usando una variable para el texto o una
-  posicion calculada (por ejemplo, `etiqueta producto 30 y_actual` para
-  listar productos uno debajo del otro). Antes, estos comandos solo
-  aceptaban texto literal entre comillas y numeros literales — si se
-  usaba una variable, el widget **no se creaba y no avisaba ningun
-  error**. Ahora `etiqueta`, `boton`, `entrada` y `cuadro` aceptan
-  variables y expresiones tanto en el texto/color como en las
-  coordenadas, ademas de seguir aceptando literales.
-- ✅ Nuevo ejemplo `lista_dinamica_gui.sipi`: un catalogo de productos que
-  genera una etiqueta por cada producto de una lista, con posiciones
-  calculadas automaticamente.
-
-**Como se encontro**: se probo el patron real de listar los elementos de
-una lista SiPi como etiquetas en una ventana (algo que cualquiera
-intentaria hacer para mostrar datos dinamicos), y se confirmo que no se
-creaba ningun widget, sin ningun mensaje de error.
-
-## Novedades de la version 22.0 — Dos bugs graves encontrados y corregidos
-
-- ✅ **Corregido un crash real y grave**: el widget `cuadro` (un rectangulo
-  de color dentro de una ventana) hacia que **todo el programa se cayera**
-  si se usaba un nombre de color en español como `"azul"` o `"rojo"`,
-  porque Tkinter solo entiende nombres de color en ingles o codigos
-  hexadecimales. Se agrego una tabla de traduccion real de colores en
-  español (`rojo`, `verde`, `azul`, `amarillo`, `morado`, `naranja`,
-  `rosa`, `celeste`, `dorado`, etc.) compartida entre las ventanas y los
-  juegos, para que nunca mas se rompa un programa por usar un color en
-  español.
-- ✅ **Corregido un bug real en los campos de entrada de las ventanas**:
-  si el usuario escribia un numero en un campo `entrada` (por ejemplo
-  para hacer una calculadora), SiPi lo guardaba como texto en vez de
-  numero, asi que cualquier cuenta matematica con ese valor fallaba
-  silenciosamente (el resultado quedaba como el texto de la formula sin
-  calcular, en vez de un numero). Ahora los campos de entrada detectan
-  automaticamente si lo que escribiste es un numero y lo convierten,
-  igual que ya hacia el comando `preguntar`.
-- ✅ Nuevo ejemplo `calculadora_con_cuadro.sipi`: una calculadora de total
-  real (precio x cantidad) que ademas prueba que los colores en español
-  ya no rompen el programa.
-
-**Como se encontraron**: se probo la interaccion real con una calculadora
-de ejemplo (escribiendo numeros en los campos y haciendo clic en
-"Calcular"), en vez de solo revisar que la ventana abriera. El primer
-intento crasheo por el color, y despues de arreglar eso, el segundo
-intento revelo que el calculo daba un resultado incorrecto (texto sin
-calcular en vez de 450). Ambos bugs afectaban un caso de uso central y
-muy comun (una calculadora), asi que se les dio prioridad alta.
-
-## Novedades de la version 21.0 — Tres bugs reales de GUI encontrados y corregidos
-
-Siguiendo con las pruebas usando pantalla virtual real (Xvfb), esta vez se
-probo la interaccion real con los widgets (escribir en campos, marcar
-casillas, elegir de listas, hacer clic en botones) en vez de solo verificar
-que las ventanas abren. Esto revelo tres bugs reales:
-
-- ✅ **Corregido: el widget `imagen` dentro de una `ventana` no hacia nada**
-  (bug silencioso, sin error visible). Estaba registrado como comando
-  valido pero nunca se habia implementado. Ahora carga imagenes reales
-  (PNG, JPG, etc.) con Pillow, con soporte opcional de redimensionado:
-  `imagen "foto.png" x y` o `imagen "foto.png" x y ancho alto`.
-- ✅ **Corregido: la `casilla` (checkbox) no actualizaba su variable si se
-  marcaba de forma programatica**, solo con clics reales del mouse. Se
-  unifico su mecanismo de actualizacion (usa `trace_add` como el resto de
-  los widgets) para que sea mas robusto en todos los casos.
-- ✅ **Corregido el mismo problema en `menu_desplegable`**: la variable no
-  se actualizaba correctamente en algunos casos. Mismo arreglo aplicado.
-
-Estos bugs se encontraron simulando interacciones reales (escribir texto,
-marcar casillas, seleccionar de una lista, hacer clic en un boton) y
-verificando que las variables de SiPi reflejaran los valores correctos
-despues — no solo revisando que el codigo no lanzara errores.
-
-- ✅ Nuevo ejemplo `galeria_imagenes.sipi`: muestra imagenes reales en una
-  ventana, con y sin redimensionado.
-
-## Novedades de la version 20.0 — Automatizacion de escritorio + correccion importante en juegos
-
-- ✅ **Captura de pantalla real** (`captura_pantalla "archivo.png"`): guarda
-  una imagen PNG real de lo que hay en la pantalla en ese momento.
-- ✅ **Portapapeles real** (`copiar_portapapeles "texto"` /
-  `pegar_portapapeles -> variable`): copia y lee el portapapeles real del
-  sistema operativo, para integrar SiPi con cualquier otra aplicacion.
-- ✅ **Corregido un bug importante en las colisiones de juegos**: hasta
-  esta version, la funcion de `chocar` se disparaba en **cada uno de los
-  60 cuadros por segundo** mientras dos sprites seguian superpuestos (por
-  ejemplo, un enemigo tocando al jugador durante medio segundo generaba
-  30 llamadas a la funcion en vez de 1). Ahora la funcion se dispara
-  **una sola vez**, en el instante exacto en que empiezan a tocarse, tal
-  como se espera en cualquier juego real. Se detecto probando el nuevo
-  ejemplo de IA con Xvfb (pantalla virtual) y corriendo el juego de
-  verdad, no solo revisando el codigo.
-- ✅ Nuevo ejemplo `automatizacion_escritorio.sipi`: captura de pantalla y
-  portapapeles reales en accion.
-
-**Nota tecnica**: esta version se probo con una pantalla virtual real
-(Xvfb) ademas de las pruebas de consola habituales, lo que permitio
-ejecutar por primera vez los ejemplos con ventanas graficas y juegos de
-principio a fin (no solo verificar que el codigo compila), y encontrar
-el bug de colisiones arriba mencionado.
-
-## Novedades de la version 19.0 — IA simple y particulas para juegos
-
-- ✅ **IA real para enemigos** (`ia nombre_sprite comportamiento objetivo
-  velocidad`):
-  - `ia enemigo seguir jugador 1.5` — el sprite persigue al objetivo de
-    verdad, calculando la direccion real hacia el cada frame.
-  - `ia guardian escapar jugador 1.2` — el sprite huye del objetivo.
-  - `ia patrulla patrullar x1 y1 x2 y2 velocidad` — el sprite camina de
-    ida y vuelta entre dos puntos, cambiando de direccion solo.
-- ✅ **Sistema de particulas real** (`explosion x y cantidad`,
-  `humo x y cantidad`, `fuego x y cantidad`, o `particulas x y cantidad
-  "tipo"`): genera un estallido real de particulas de colores que se
-  dispersan y se desvanecen con el tiempo, usable desde cualquier funcion
-  (por ejemplo, al chocar con un enemigo).
-- ✅ **Posiciones de sprites accesibles como variables reales**
-  (`nombre_x`, `nombre_y`): cualquier funcion (como una funcion de
-  colision) puede leer `jugador_x` y `jugador_y` para saber donde esta
-  el jugador en ese momento, por ejemplo para disparar una explosion
-  justo en su posicion.
-- ✅ Nuevo ejemplo `enemigos_ia_particulas.sipi`: un perseguidor que sigue
-  al jugador, un guardian que lo esquiva, un sprite que patrulla solo, y
-  explosiones reales al chocar.
-
-## Novedades de la version 18.0 — Fisica real para juegos
-
-- ✅ **Gravedad real** (`gravedad N` dentro de `crear_juego`): el jugador
-  cae con aceleracion real en vez de moverse con las flechas arriba/abajo.
-  Con gravedad activada, la barra espaciadora hace **saltar** al jugador
-  de verdad (impulso proporcional a la gravedad).
-- ✅ **Rebote real** (`rebote N`, de 0 a 1): al tocar el suelo, el jugador
-  rebota con menos energia en cada bote, como una pelota real, hasta
-  asentarse.
-- ✅ **Friccion real** (`friccion N`): el jugador frena gradualmente al
-  soltar las flechas, en vez de detenerse en seco.
-- ✅ **Mundos mas grandes que la pantalla** (`tamano_mundo ANCHO ALTO`) y
-  **camara que sigue al jugador** (`camara_seguir jugador`): para hacer
-  niveles de plataformas que se desplazan mientras el jugador avanza, como
-  un juego de verdad.
-- ✅ Nuevo ejemplo `plataformas_fisica.sipi`: un nivel de plataformas de
-  1600 pixeles de ancho (mas grande que la ventana) con salto, gravedad,
-  rebote, friccion, camara que sigue al jugador, y monedas para recolectar.
-
-**Nota**: si no usas `gravedad`, el juego sigue funcionando exactamente
-igual que antes (movimiento clasico con las 4 flechas), para no romper
-ningun proyecto existente.
-
-## Novedades de la version 17.0 — Formularios y CSS automatico
-
-- ✅ **Formularios web reales** (`formulario "accion" / campo / boton / fin`):
-  genera un `<form>` completo y funcional dentro de `pagina_web`, con
-  distintos tipos de campo:
-  - `campo "Nombre" texto` — campo de texto normal
-  - `campo "Correo" email` — campo de email
-  - `campo "Edad" numero` — campo numerico
-  - `campo "Clave" clave` — campo de contraseña
-  - `campo "Mensaje" area` — area de texto multilinea
-  - `boton "Enviar"` — boton de envio del formulario
-- ✅ **CSS automatico con temas** (`tema "oscuro"` / `tema "claro"` y
-  `color "#3498db"` dentro de `pagina_web`): cambia toda la paleta de
-  colores del sitio generado (fondo, texto, tarjetas, formularios) y el
-  color de acento de botones y links, sin tocar una linea de CSS.
-- ✅ Nuevo ejemplo `formulario_contacto_web.sipi`: una pagina de contacto
-  real con tema oscuro, color personalizado y un formulario funcional.
-
-## Novedades de la version 16.0 — HTML sin escribir HTML
-
-- ✅ **Paginas web declarativas reales** (`pagina_web "Nombre" / ... / fin`):
-  arma sitios web completos usando comandos simples en español, sin
-  escribir una sola linea de HTML o CSS. SiPi genera el `index.html` y
-  `estilo.css` reales, con un diseño limpio ya incluido.
-  - `titulo "..."` / `subtitulo "..."` — encabezados
-  - `texto "..."` — parrafos (soporta `{variables}`)
-  - `boton "..."` — un boton estilizado
-  - `imagen "ruta.png"` — una imagen
-  - `enlace "Texto" "url"` — un link
-  - `lista_web "item1|item2|item3"` — una lista con viñetas
-  - `tarjeta "Titulo" "Texto"` — una tarjeta con sombra, al estilo de
-    componentes modernos
-  - `separador` — una linea divisoria
-- ✅ Nuevo ejemplo `tienda_sin_html.sipi`: una landing page de tienda
-  online completa, generada enteramente desde SiPi.
-
-## Novedades de la version 15.0
-
-- ✅ **Enumeraciones reales** (`enum Colores / ROJO / VERDE / AZUL / fin`):
-  crea valores numerados automaticamente (`Colores_ROJO = 0`,
-  `Colores_VERDE = 1`, etc.), ademas de un diccionario `Colores` completo.
-  Son constantes: no se pueden modificar despues de creadas.
-- ✅ **Estructuras reales** (`estructura Persona / nombre = "" / edad = 0 /
-  fin`): define una plantilla con valores por defecto. El comando
-  `instanciar Persona -> variable` crea una copia independiente de la
-  plantilla (cada instancia es su propio diccionario, sin compartir datos
-  entre si).
-- ✅ **Formateador automatico de codigo** (como Black en Python): el boton
-  "🪄 Formatear" del editor visual, o el comando
-  `python sipi.py --formatear archivo.sipi` desde la consola, reindenta
-  automaticamente cualquier programa `.sipi` con 4 espacios por nivel de
-  anidamiento, sin importar lo desordenado que estuviera antes.
-- ✅ Nuevo ejemplo `enum_y_estructuras.sipi`: un sistema simple de
-  personajes con clases (enum) y una plantilla de personaje (estructura).
-
-## Novedades de la version 14.0 — Depurador Visual
-
-- ✅ **Depurador visual paso a paso real** (boton "🐞 Depurar" en el editor):
-  ejecuta tu programa linea por linea en una ventana dedicada, mostrando
-  el codigo con la linea actual resaltada y un panel con **todas las
-  variables en vivo** (incluyendo listas y diccionarios completos) que se
-  actualiza en cada paso.
-  - **Breakpoints reales**: hace clic en el numero de una linea para
-    poner o quitar un punto de interrupcion (se marca en rojo). La
-    ejecucion se pausa automaticamente al llegar ahi.
-  - **Controles**: "⏭ Paso" avanza una linea a la vez, "▶ Continuar" corre
-    hasta el proximo breakpoint, "⏹ Detener" corta la ejecucion en el
-    momento exacto en que estés.
-  - Pensado para programas de consola y de logica (listas, diccionarios,
-    matrices, funciones); los programas con `ventana` o `crear_juego`
-    abren su propia ventana real y se depuran mejor con `modo_debug` por
-    consola.
-
-## Novedades de la version 13.0
-
-- ✅ **Temporizadores reales** (`cada N segundos ... fin`): repite un bloque
-  de codigo cada cierto tiempo. Soporta dos modos:
-  - `cada 1 segundos 5 veces / fin` — se repite una cantidad fija de veces.
-  - `cada 0.5 segundos / fin` — se repite indefinidamente hasta que el
-    propio codigo use `detener_temporizador` para pararlo (por ejemplo, al
-    cumplirse una condicion).
-- ✅ Nuevo ejemplo `temporizadores.sipi`: una cuenta regresiva real y un
-  temporizador que se detiene solo cuando se cumple una condicion.
-
-## Novedades de la version 12.0
-
-- ✅ **JSON real**: `json_crear`, `json_leer`, `json_guardar`, `json_texto`.
-  Cualquier diccionario o lista de SiPi se puede guardar como un archivo
-  `.json` real y volver a cargar despues, o convertir a texto legible.
-- ✅ **CSV real, compatible con Excel**: `csv_leer`, `csv_guardar`. Una
-  lista de diccionarios se guarda como un archivo `.csv` real con
-  encabezados, listo para abrir directamente en Excel o Google Sheets, y
-  tambien se puede leer un CSV existente como una lista de diccionarios.
-- ✅ Nuevo ejemplo `inventario_json_csv.sipi`: un caso real de guardar un
-  producto en JSON y una lista de ventas en CSV, y volver a leerlos.
-
-## Novedades de la version 11.0
-
-- ✅ **Constantes reales** (`const NOMBRE = valor`): una vez definida, SiPi
-  impide modificarla con `variable`, `sumar` o `restar`, y avisa con un
-  error claro si lo intentas.
-- ✅ **Comentarios multilinea** (`/* ... */`): para documentar bloques
-  completos de codigo, ademas de los comentarios de una linea (`//`).
-- ✅ **Cadenas multilinea** (`"""..."""`): para textos largos, plantillas
-  HTML, o mensajes de varias lineas, con interpolacion de `{variables}`
-  incluida. Funciona igual en el archivo principal y en modulos
-  importados.
-- ✅ **Mensajes de error con sugerencias inteligentes**: si escribis mal un
-  comando o el nombre de una funcion, SiPi te sugiere la opcion mas
-  parecida ("¿Quisiste decir 'diccionario_asignar'?").
-- ✅ **Pila de llamadas al fallar** (stack trace real): si un error ocurre
-  dentro de una funcion llamada por otra funcion, SiPi te muestra la
-  cadena completa de llamadas que llevo hasta ahi, para encontrar el
-  problema mas rapido.
-- ✅ Nuevo ejemplo `funciones_nuevas_v11.sipi` que muestra todo esto en
-  conjunto.
-
-### Sobre el resto de ideas propuestas (JSON, CSV, PDF, email, fisica de
-juegos, IA simple, gestor de paquetes, autocompletado, depurador visual,
-etc.)
-
-Son una lista excelente y varias van a ir sumandose en las proximas
-versiones. Para mantener cada entrega **real y probada** (sin prometer
-botones que no funcionen), se van agregando de a bloques que se puedan
-implementar y verificar de verdad, en lugar de simular todas de una vez.
-Las de mayor impacto y viabilidad inmediata (JSON, CSV, temporizadores,
-formateador de codigo) son las siguientes candidatas.
-
-## Novedades de la version 10.0 — correccion importante de usabilidad
-
-- ✅ **Corregido bug grave**: los comandos de archivos y datos
-  (`leer_archivo`, `crear_archivo`, `borrar_archivo`, `crear_carpeta`,
-  `copiar_archivo`, `listar_archivos`, `comprimir_carpeta`,
-  `descomprimir_zip`, `guardar_dato`, `obtener_dato`, `borrar_dato`,
-  `obtener_url`) solo aceptaban nombres de archivo o claves escritos
-  literalmente entre comillas. Si guardabas el nombre en una variable (algo
-  muy comun, por ejemplo al recorrer una lista de archivos con
-  `para_cada`), el comando fallaba silenciosamente. Ahora todos estos
-  comandos aceptan tanto texto literal (`"archivo.txt"`) como una variable
-  (`nombre_archivo`) indistintamente.
-- ✅ **Corregido bug de aliasing en listas y diccionarios**: si agregabas la
-  misma variable (un diccionario o una lista) a distintos elementos de una
-  lista, una matriz, u otro diccionario, todos terminaban compartiendo el
-  mismo objeto por error. Ahora cada asignacion crea una copia
-  independiente, evitando cambios inesperados entre datos que deberian ser
-  distintos.
-- ✅ Nuevo ejemplo: `procesar_archivos_con_variables.sipi`, que muestra el
-  patron real (muy comun) de recorrer una lista de nombres de archivo y
-  procesarlos uno por uno.
-
-## Novedades de la version 9.0 — correcciones importantes de estabilidad
-
-- ✅ **Proteccion contra importaciones circulares**: si el archivo A importa
-  a B y B importa de vuelta a A, SiPi ya no se cuelga ni se cae — detecta
-  el ciclo y continua normalmente. Ademas, importar el mismo modulo dos
-  veces desde el mismo archivo ya no lo vuelve a ejecutar innecesariamente.
-- ✅ **Corregido bug de aliasing en matrices**: si creabas una matriz usando
-  un diccionario o una lista como valor inicial, todas las celdas
-  compartian el mismo objeto por error — modificar una celda modificaba
-  todas las demas. Ahora cada celda tiene su propia copia independiente,
-  como corresponde.
-- ✅ Verificado que los generadores de apps Android y Windows funcionan
-  correctamente incluso con nombres de proyecto que tienen espacios o
-  caracteres especiales.
-
-## Novedades de la version 8.0
-
-- ✅ **Sonido generado sin archivos externos** (`reproducir_tono`, y `tono`
-  dentro de `crear_juego`): SiPi genera ondas de sonido reales (senoidales)
-  al momento, para que no dependas de conseguir un archivo `.wav` para
-  tener efectos de sonido. Util para juegos, notificaciones o melodias
-  simples.
-- ✅ **Correccion real de bug**: el sonido de las colisiones (`chocar`) no
-  se reproducia correctamente porque buscaba el sonido con el nombre
-  equivocado. Ahora `chocar` acepta un nombre de sonido opcional:
-  `chocar sprA sprB funcion() nombre_del_sonido`.
-
-## Novedades de la version 7.0
-
-- ✅ **Matrices reales (arrays 2D)**: `matriz_crear`, `matriz_asignar`,
-  `matriz_obtener`, `matriz_filas`, `matriz_columnas`. Perfecto para
-  tableros de juegos (tres en raya, buscaminas, ajedrez), hojas de calculo
-  simples, o cualquier dato en forma de grilla.
-- ✅ **Obstaculos con movimiento real en los juegos** (`mover_aleatorio`):
-  los sprites pueden moverse solos por la pantalla y rebotar en los bordes,
-  para juegos mas dinamicos con enemigos que se mueven.
-- ✅ Nuevos ejemplos: un **Tres en raya** completo usando matrices y
-  funciones, un **juego con obstaculos moviles**, y una **agenda de
-  contactos** que combina GUI real con base de datos persistente real.
-
-## Novedades de la version 6.0
-
-- ✅ **Sistema de modulos real** (`importar "archivo.sipi"`): organiza tus
-  proyectos grandes en varios archivos y reutiliza funciones y variables
-  entre ellos, como en cualquier lenguaje serio.
-- ✅ **Modo debug paso a paso** (`modo_debug`): activalo al principio de tu
-  programa y SiPi te muestra cada linea antes de ejecutarla, para encontrar
-  errores facilmente.
-- ✅ **Pestañas reales en ventanas** (`pestanias` / `pestana "Nombre" / fin`):
-  organiza tu interfaz grafica en varias pestañas, como cualquier app
-  profesional.
-- ✅ **Menu desplegable real** (`menu_desplegable`): un combobox real para
-  elegir una opcion de una lista desplegable.
-- ✅ Corregido: los valores booleanos y las funciones importadas desde
-  modulos ahora funcionan de forma coherente en todos los casos.
-
-## Novedades de la version 5.0
-
-- ✅ **Diccionarios reales** (clave -> valor): `diccionario_crear`,
-  `diccionario_asignar`, `diccionario_obtener`, `diccionario_tiene`,
-  `diccionario_eliminar`, `diccionario_claves`. Ideal para fichas de
-  productos, perfiles de usuario, configuraciones, etc.
-- ✅ **Manejo de errores real**: bloques `intentar / capturar / fin` para que
-  tu programa no se caiga ante un error (archivo faltante, dato invalido,
-  etc.) y en cambio reaccione de forma controlada. La variable `error`
-  queda disponible con el mensaje real dentro del bloque `capturar`.
-- ✅ **Texto avanzado**: `texto_dividir`, `texto_reemplazar`, `texto_contiene`.
-- ✅ **Listas mas potentes**: `lista_ordenar`, `lista_invertir`,
-  `lista_contiene`, `suma_lista`, `promedio_lista`.
-- ✅ **Matematica adicional**: `minimo`, `maximo`, `redondear`, y las
-  constantes predefinidas `PI` y `E`.
-- ✅ **Registro de eventos real** (`registrar_evento`): guarda logs con
-  fecha y hora reales en un archivo, util para auditorias o depuracion.
-- ✅ **Nuevos widgets de interfaz**: `barra_progreso` (barra de progreso
-  real) con el comando `actualizar_barra` para moverla dinamicamente.
-- ✅ Los valores booleanos ahora se muestran como `verdadero` / `falso` en
-  vez de `True` / `False`, para que todo el lenguaje sea consistente.
-
-## Todo lo que ya traia SiPi
-
-- **Editor Visual** con vista previa en vivo del resultado mientras escribis,
-  resaltado de sintaxis, panel de configuracion (temas de colores, tamaño de
-  letra, color de texto personalizado), y botones para ejecutar y compilar.
-- **Funciones con retorno real** (`devolver`, `llamar_valor`).
-- **Bucles** `repetir`, `mientras`, y `para_cada elemento en lista`.
-- **Operadores logicos** `y`, `o`, `no` en condiciones.
-- **Generador de sitios web reales** (HTML/CSS/JS) y servidor web local.
-- **Base de datos local persistente real** (JSON).
-- **Peticiones HTTP reales**.
-- **Auto-instalacion real** de componentes que falten, e instalacion de
-  paquetes bajo demanda.
-- **Interfaces graficas reales**: ventanas, botones, etiquetas, campos de
-  texto, checkboxes, listas, barras de progreso.
-- **Juegos 2D reales** con colisiones, sonido y puntaje.
-- **Compilador real** de programas `.sipi` a `.exe` de Windows.
-- **Generadores de proyectos reales y compilables** para Android (Kivy +
-  Buildozer) y Windows (Tkinter + PyInstaller).
-- **Compresion/descompresion real de archivos** (`comprimir_carpeta`,
-  `descomprimir_zip`).
-
-## Sobre la promesa de "instalar automaticamente" apps de Android
-
-Compilar un APK real requiere el SDK de Android, NDK, Java y varios GB de
-herramientas del sistema — cosas que no pueden vivir dentro de un archivo
-`.sipi` ni de un `.zip`. Por eso SiPi es honesto: en vez de fingir un boton
-magico, **genera el proyecto completo y funcional** para que lo compiles con
-un solo comando (`buildozer android debug`), explicado paso a paso en el
-`LEEME.txt` que se crea junto al proyecto.
-
-## Requisitos (Windows 10)
-
-- Python 3.10 o superior. Si no lo tenes, ejecuta `instalar.bat` y te va a
-  guiar para descargarlo (recorda marcar "Add Python to PATH" al instalar).
-- Todo lo demas se instala solo, ya sea con `instalar.bat` o
-  automaticamente la primera vez que tu programa lo necesite.
-
-## Como usar
-
-1. Descomprimí este ZIP en cualquier carpeta.
-2. Ejecutá `instalar.bat` una sola vez.
-3. Opciones para trabajar:
-   - `ejecutar_ejemplo.bat` — menu con todos los ejemplos, incluido el editor.
-   - `editor.bat` — abre el Editor Visual de SiPi (con vista previa en vivo).
-   - `sipi.bat mi_programa.sipi` — corre un programa `.sipi` por consola.
-   - `compilar_programa.bat mi_programa.sipi` — genera un `.exe` real.
-
-## El lenguaje SiPi — guia completa
-
-```
-programa "Nombre de mi programa"
-
-// Variables, matematica y constantes
-variable edad = 15
-decir "PI vale {PI} y E vale {E}"
-sumar edad 1
-restar edad 1
-raiz 16 -> raiz_de_16
-potencia 2 10 -> dos_a_la_diez
-azar_entre 1 100 -> numero_aleatorio
-minimo 3 7 -> el_menor
-maximo 3 7 -> el_mayor
-redondear 4.7 -> valor_redondeado
-
-// Texto
-longitud "Hola" -> cuantas_letras
-mayusculas "hola" -> en_mayusculas
-minusculas "HOLA" -> en_minusculas
-texto_dividir "a,b,c" "," -> partes
-texto_reemplazar "hola mundo" "mundo" "SiPi" -> nuevo_texto
-texto_contiene "hola mundo" "mundo" -> lo_contiene
-
-// Condicionales con operadores logicos
-si edad >= 18 y lo_contiene == verdadero
-    decir "Cumple ambas condiciones"
-fin
-si edad < 10 o lo_contiene == verdadero
-    decir "Cumple al menos una"
-fin
-si no lo_contiene == falso
-    decir "El operador 'no' funciona"
-fin
-
-// Bucles
-repetir 3 veces
-    decir "Esto se repite"
-fin
 variable contador = 0
-mientras contador < 5
+repetir 5 veces
     sumar contador 1
+    decir "Contador: {contador}"
 fin
 
-// Listas reales
-lista_crear numeros
-lista_agregar numeros 5
-lista_agregar numeros 2
-lista_ordenar numeros
-lista_invertir numeros
-lista_contiene numeros 5 -> tiene_el_5
-suma_lista numeros -> total
-promedio_lista numeros -> promedio
-para_cada n en numeros
-    decir "Numero: {n}"
+si contador == 5
+    decir "El contador llego a 5 correctamente."
+sino
+    decir "Algo salio mal."
 fin
 
-// Diccionarios reales
-diccionario_crear persona
-diccionario_asignar persona "nombre" "Ana"
-diccionario_obtener persona "nombre" -> nombre_persona
-diccionario_tiene persona "nombre" -> existe
-diccionario_claves persona -> claves
-
-// Funciones (con y sin retorno)
 funcion saludar(persona)
-    decir "Hola, {persona}!"
-fin
-llamar saludar("Mundo")
-
-funcion sumar_dos(a, b)
-    devolver a + b
-fin
-llamar_valor sumar_dos(4, 5) -> resultado
-
-// Manejo de errores real
-intentar
-    leer_archivo "puede_no_existir.txt" -> contenido
-capturar
-    decir "Hubo un error: {error}"
+    decir "Hola desde una funcion, {persona}!"
 fin
 
-// Entrada del usuario por consola
-preguntar "Como te llamas?" -> nombre_usuario
-
-// Archivos y automatizacion real
-crear_carpeta "datos"
-crear_archivo "datos/nota.txt" "Esto es una nota real"
-leer_archivo "datos/nota.txt" -> contenido
-copiar_archivo "datos/nota.txt" "datos/copia.txt"
-borrar_archivo "datos/copia.txt"
-listar_archivos "datos" -> archivos
-comprimir_carpeta "datos" "datos_respaldo.zip"
-descomprimir_zip "datos_respaldo.zip" "datos_restaurados"
-registrar_evento "Se hizo una automatizacion" "eventos.log"
-ejecutar "dir"
-esperar 2
-
-// Base de datos local persistente real
-guardar_dato "puntaje_maximo" 9500
-obtener_dato "puntaje_maximo" -> mejor_puntaje
-
-// Utilidades varias
-fecha_hora_actual -> ahora
-hash_texto "clave secreta" -> hash_resultado
-elegir_al_azar "rojo|verde|azul" -> color_elegido
-
-// Peticiones web reales
-obtener_url "https://api.ejemplo.com/datos" -> respuesta
-
-// Instalar cualquier paquete de Python bajo demanda
-instalar_paquete "requests"
-
-// Ventanas reales (interfaz grafica completa)
-ventana "Mi Ventana" 420 380
-    etiqueta "Hola desde una ventana real" 50 20
-    entrada mi_variable 50 60
-    casilla "Aceptar terminos" 50 100 acepto
-    lista 50 130 30 5 "Opcion A|Opcion B|Opcion C" -> opcion_elegida
-    barra_progreso mi_barra 50 300 200 50
-    boton "Presioname" 50 320 mi_funcion()
-fin
-
-// Juegos reales con colisiones, sonido y puntaje
-funcion ganar_punto()
-    sumar puntaje 1
-fin
-crear_juego "Mi Juego" 640 480
-    sprite jugador 300 220 40 40 "cian"
-    sprite meta 50 400 30 30 "verde"
-    velocidad 6
-    puntaje_inicial 0
-    mostrar_puntaje
-    chocar jugador meta ganar_punto()
-fin
-
-// Modulos: organiza tu proyecto en varios archivos
-importar "mi_modulo.sipi"
-
-// Modo debug: muestra cada linea antes de ejecutarla
-modo_debug
-
-// Pestañas y menu desplegable en ventanas
-ventana "Panel" 450 380
-    pestanias 20 20 400 300
-        pestana "Perfil"
-            etiqueta "Nombre:" 20 20
-            entrada campo_nombre 100 18
-            menu_desplegable 20 60 20 "Argentina|Chile|Uruguay" -> pais
-        fin
-        pestana "Configuracion"
-            casilla "Notificaciones" 20 20 notificaciones
-        fin
-    fin
-fin
-
-// Paginas web declarativas: HTML sin escribir HTML
-pagina_web "Mi Tienda"
-    titulo "Bienvenido a Mi Tienda"
-    subtitulo "Los mejores productos"
-    texto "Encontra de todo un poco"
-    tarjeta "Envio gratis" "En compras mayores a $50000"
-    lista_web "Item 1|Item 2|Item 3"
-    boton "Comprar ahora"
-    enlace "Contacto" "contacto.html"
-    separador
-fin
-
-// Generar y publicar un sitio web real (plantilla simple, no declarativa)
-generar_pagina_web "MiSitio"
-iniciar_servidor_web "MiSitio_web" 8000
-
-// Generar proyectos reales de apps nativas
-generar_app_android "MiApp"
-generar_app_windows "MiPrograma"
+llamar saludar("NovaLab")
 ```
 
-### Referencia rapida de comandos
+Correlo con `sipi.bat mi_programa.sipi` (Windows) o `python3 sipi.py mi_programa.sipi` (Linux/Mac). Nada más que instalar Python.
 
-| Categoria | Comandos |
+---
+
+## ¿Por qué existe SiPi?
+
+Casi todos los lenguajes que se usan para enseñar a programar (Python, JavaScript, C) tienen su sintaxis, sus palabras clave y sus mensajes de error en inglés. Para alguien que recién arranca — sobre todo en una escuela o facultad de habla hispana — eso agrega una barrera extra que no tiene nada que ver con aprender a programar: primero hay que traducir, después entender.
+
+SiPi saca esa barrera. Las palabras clave (`si`, `mientras`, `funcion`, `repetir`, `decir`), los mensajes de error y los ejemplos están en español desde el primer día. La idea no es reemplazar a Python — es ser el lenguaje en el que alguien piensa su primer programa, antes de pasar a lenguajes de propósito general.
+
+## ¿Qué problema resuelve?
+
+- **La barrera del idioma al aprender a programar.** El código se lee como una instrucción en español, no como un jeroglífico en inglés.
+- **La fricción de armar una interfaz gráfica, un juego o una página web desde cero.** En la mayoría de los lenguajes eso implica librerías externas, configuración y bastante código repetitivo antes de ver algo en pantalla. En SiPi, `ventana ... fin` o `crear_juego ... fin` son parte del lenguaje mismo.
+- **El miedo a "romper todo".** Los mensajes de error son en español y, si te equivocás escribiendo un comando, SiPi sugiere el nombre correcto (`¿Quisiste decir 'imprimir'?`).
+
+## ¿Para quién fue creado?
+
+- Estudiantes que están aprendiendo a programar por primera vez, en español.
+- Docentes que quieren un lenguaje sin barrera de idioma para introducir lógica de programación.
+- Cualquiera que quiera prototipar rápido una interfaz gráfica, un juego 2D simple o una página web sin escribir HTML/CSS a mano.
+
+**SiPi no está pensado** para reemplazar Python/JavaScript en un entorno profesional, ni para software de alto rendimiento (ver [cuándo NO conviene usar SiPi](#cuándo-no-conviene-usar-sipi) más abajo).
+
+---
+
+## ¿Qué puede hacer hoy?
+
+- Lo básico de cualquier lenguaje: variables, condicionales, bucles, funciones (con recursión real), manejo de errores propios, tipos opcionales, pattern matching (`seleccionar`/`caso`).
+- Programación orientada a objetos real: `clase`, herencia (`hereda_de`), interfaces (`implementa`), polimorfismo.
+- Listas, diccionarios, matrices y programación funcional (`lista_mapear`, `lista_filtrar`, `lista_reducir`).
+- Interfaces gráficas de escritorio (`ventana ... fin`, botones, listas, pestañas, barras de progreso) sin tocar tkinter directamente.
+- Juegos 2D con físicas, IA simple y partículas (`crear_juego ... fin`, sobre pygame).
+- Páginas web declarativas y un backend HTTP real (`pagina_web`, `iniciar_api_web`).
+- Persistencia real: JSON, CSV, y SQLite (`sqlite_conectar`, `sqlite_consultar`).
+- **Gestor de paquetes real, sin depender de un catálogo propio.** `instalar_modulo` baja un `.sipi` suelto por URL; `instalar_repositorio "usuario/repo"` clona un repositorio de GitHub completo con varios `.sipi`; `buscar_paquete "tema"` busca repos reales en GitHub (API pública, sin catálogo inventado); `instalar_dependencias` lee un manifiesto `sipi_paquetes.json` (equivalente a `package.json`) e instala todo de una. Ver [`PACKAGES.md`](PACKAGES.md).
+- Un editor visual propio, extensión de VS Code con resaltado de sintaxis y autocompletado, servidor LSP, depurador con "viaje en el tiempo", formateador de código, caché de bytecode (~7x más rápido en ejecuciones repetidas), y un compilador a `.exe`.
+- Suite de pruebas automatizadas (17 tests) que corre programas `.sipi` reales contra el motor.
+
+## ¿Qué no puede hacer todavía?
+
+- El gestor de paquetes no tiene un índice central curado tipo PyPI/npm — depende de que el paquete esté en un repo público de GitHub (lo cual cubre la gran mayoría de casos reales, pero no hay un catálogo oficial de "módulos recomendados").
+- El soporte 3D es básico (renderer de wireframes), no un motor 3D completo.
+- No hay instalador nativo para Linux/Mac tan pulido como el de Windows (`instalar.sh` existe pero es más nuevo y menos probado).
+- El LSP valida estructura de bloques y autocompleta comandos, pero todavía no valida la sintaxis interna de cada comando individual, ni tiene "ir a la definición".
+- Es un intérprete escrito en Python: el techo de rendimiento es el de Python, no el de un lenguaje compilado a nativo.
+
+## ¿Cuál es su objetivo?
+
+Que aprender a programar en español sea tan directo como aprender en inglés lo es hoy — y que ese primer programa, si el estudiante quiere, ya pueda tener una ventana, un botón y algo pasando en pantalla, no solo texto en una consola.
+
+---
+
+## Instalación
+
+**Windows:**
+1. Descomprimí el ZIP en una carpeta (ej. `C:\SiPi`).
+2. Doble clic en `instalar.bat` (revisa Python, instala `pygame`, `pyinstaller`, `Pillow`).
+3. Ejecutá con `sipi.bat mi_programa.sipi`, o abrí el editor visual con `editor.bat`.
+
+**Linux / macOS:**
+```bash
+python3 sipi.py mi_programa.sipi
+python3 editor_sipi.py   # requiere tkinter
+```
+
+Requisito: Python 3.10+.
+
+## ¿Interpretado o compilado? ¿Multiplataforma? ¿Open source?
+
+- **Interpretado.** `sipi.py` lee y ejecuta un archivo `.sipi` directamente. También existe una caché de bytecode propia (`.sipic`) que acelera ejecuciones repetidas del mismo archivo (no confundir con compilación a nativo).
+- **Compilable a ejecutable.** `generar_exe.py` empaqueta un programa `.sipi` en un `.exe`/binario standalone usando PyInstaller — no requiere que quien lo reciba tenga Python instalado.
+- **Multiplataforma en su núcleo** (Windows, Linux, macOS, ya que corre sobre Python), con soporte experimental para Android vía Kivy. El instalador y los `.bat` están más pulidos en Windows por ahora.
+- **Código abierto** para desarrollo. Existe además un modo "protegido" (`proteger_codigo.py`) para cuando alguien quiere distribuir una app hecha en SiPi sin exponer el intérprete completo — pensado para publicar proyectos de terceros, no para ocultar el lenguaje en sí.
+
+## Comparación rápida
+
+| | SiPi | Python | JavaScript | Lua |
+|---|---|---|---|---|
+| Palabras clave | Español | Inglés | Inglés | Inglés |
+| Curva de entrada | Muy baja | Baja | Media | Baja |
+| GUI de escritorio integrada al lenguaje | Sí (`ventana`) | No (requiere tkinter aparte) | No | No |
+| Motor de juegos 2D integrado | Sí (`crear_juego`) | No (requiere pygame aparte) | No (requiere librería) | No (requiere Love2D) |
+| Ecosistema de paquetes | Incipiente | Enorme (PyPI) | Enorme (npm) | Chico |
+| Rendimiento | El de Python (más caché de bytecode propia) | Referencia | Más rápido (V8) | Más rápido |
+| Uso recomendado | Aprender a programar en español, prototipos rápidos | Propósito general, producción | Web, producción | Scripting embebido, juegos |
+
+## Cuándo NO conviene usar SiPi
+
+- Si el objetivo final es conseguir trabajo como programador: en ese caso conviene aprender la lógica acá si ayuda, pero el destino final debería ser Python/JavaScript/lo que pida el mercado.
+- Software que necesita rendimiento serio (procesamiento pesado, tiempo real estricto, miles de usuarios concurrentes): SiPi hereda el techo de rendimiento de Python.
+- Proyectos que dependen de un ecosistema de librerías maduro: el de SiPi todavía es chico.
+- Equipos grandes con necesidad de herramientas de tipado estricto, tooling corporativo, CI/CD complejo, etc.: la base ahí es más sólida en lenguajes establecidos.
+
+---
+
+## Documentación
+
+| Documento | Para qué sirve |
 |---|---|
-| Variables y matematica | `variable`, `sumar`, `restar`, `raiz`, `potencia`, `azar_entre`, `minimo`, `maximo`, `redondear`, constantes `PI`/`E` |
-| Texto | `longitud`, `mayusculas`, `minusculas`, `texto_dividir`, `texto_reemplazar`, `texto_contiene` |
-| Control de flujo | `si/sino/fin` (con `y`/`o`/`no`), `repetir...veces`, `mientras`, `para_cada...en` |
-| Funciones | `funcion`, `llamar`, `devolver`, `llamar_valor` |
-| Listas | `lista_crear`, `lista_agregar`, `lista_obtener`, `lista_longitud`, `lista_eliminar`, `lista_ordenar`, `lista_invertir`, `lista_contiene`, `suma_lista`, `promedio_lista` |
-| Diccionarios | `diccionario_crear`, `diccionario_asignar`, `diccionario_obtener`, `diccionario_tiene`, `diccionario_eliminar`, `diccionario_claves` |
-| Manejo de errores | `intentar`, `capturar`, `fin` (variable `error` disponible) |
-| Archivos | `crear_archivo`, `leer_archivo`, `borrar_archivo`, `copiar_archivo`, `crear_carpeta`, `listar_archivos`, `comprimir_carpeta`, `descomprimir_zip` |
-| Sistema | `ejecutar`, `esperar`, `instalar_paquete`, `registrar_evento` |
-| Datos persistentes | `guardar_dato`, `obtener_dato`, `borrar_dato` |
-| Web | `obtener_url`, `generar_pagina_web`, `iniciar_servidor_web` |
-| Paginas declarativas | `pagina_web / titulo / subtitulo / texto / boton / imagen / enlace / lista_web / tarjeta / separador / tema / color / fin` |
-| Formularios web | `formulario "accion" / campo "Etiqueta" tipo / boton / fin` |
-| Interfaz grafica | `ventana`, `etiqueta`, `boton`, `entrada`, `casilla`, `lista`, `barra_progreso`, `actualizar_barra`, `menu_desplegable`, `pestanias`, `pestana`, `cuadro`, `imagen` (con redimensionado opcional) |
-| Juegos | `crear_juego`, `sprite`, `velocidad`, `chocar`, `sonido`, `tono`, `puntaje_inicial`, `mostrar_puntaje`, `mover_aleatorio` |
-| Fisica de juegos | `gravedad`, `rebote`, `friccion`, `tamano_mundo`, `camara_seguir` |
-| IA y particulas | `ia nombre seguir/escapar objetivo vel`, `ia nombre patrullar x1 y1 x2 y2 vel`, `explosion`, `humo`, `fuego` |
-| Automatizacion de escritorio | `captura_pantalla`, `copiar_portapapeles`, `pegar_portapapeles` |
-| Apps nativas | `generar_app_android`, `generar_app_windows` |
-| Utilidades | `fecha_hora_actual`, `hash_texto`, `elegir_al_azar`, `reproducir_tono` |
-| JSON y CSV | `json_crear`, `json_leer`, `json_guardar`, `json_texto`, `csv_leer`, `csv_guardar` |
-| Temporizadores | `cada N segundos [M veces] / fin`, `detener_temporizador` |
-| Enum y estructuras | `enum Nombre / valores / fin`, `estructura Nombre / campos / fin`, `instanciar` |
-| Modulos y depuracion | `importar "archivo.sipi"`, `modo_debug` |
-| Matrices (2D) | `matriz_crear`, `matriz_asignar`, `matriz_obtener`, `matriz_filas`, `matriz_columnas` |
+| [`DOCUMENTACION.md`](DOCUMENTACION.md) | Guía de instalación, tutorial completo desde cero, guía de sintaxis y referencia de comandos |
+| [`LANGUAGE_SPEC.md`](LANGUAGE_SPEC.md) | Especificación del lenguaje: gramática, tipos, semántica |
+| [`SYNTAX.md`](SYNTAX.md) | Referencia rápida de sintaxis (bloques, comentarios, expresiones) |
+| [`FUNCTIONS.md`](FUNCTIONS.md) | Referencia de todos los comandos, como una tabla de funciones |
+| [`EXAMPLES.md`](EXAMPLES.md) | Índice de los ejemplos en `ejemplos/`, organizados por categoría |
+| [`PACKAGES.md`](PACKAGES.md) | Cómo funciona el gestor de paquetes real de SiPi (`instalar_modulo`, `instalar_repositorio`, `buscar_paquete`, `sipi_paquetes.json`) |
+| [`AI_GUIDE.md`](AI_GUIDE.md) | Guía para que un asistente de IA (ChatGPT, Claude, etc.) entienda y genere código SiPi correctamente |
+| [`PROMPTS.md`](PROMPTS.md) | Prompts ya armados para pedirle código SiPi a un asistente de IA |
+| [`CHANGELOG.md`](CHANGELOG.md) | Historial completo de versiones |
 
-## El Editor Visual de SiPi
+## Roadmap
 
-Abrilo con `editor.bat`. Tiene resaltado de sintaxis en vivo, un panel de
-vista previa que corre tu programa en segundo plano y te muestra el
-resultado apenas dejas de escribir, un boton de configuracion (temas de
-colores, tamaño de letra, color de texto), y botones para ejecutar el
-programa completo (incluidas ventanas y juegos reales) o compilarlo a
-`.exe` con un clic.
+**Ya hecho:** editor visual, intérprete, compilador a ejecutable, GUI de escritorio, motor de juegos 2D, POO real, tipos opcionales, pattern matching, LSP, extensión de VS Code, depurador con viaje en el tiempo, caché de bytecode, runtime móvil (Android/Kivy).
 
-## Publico pensado
+**Pendiente:**
+- [ ] Instalador de Linux/Mac tan pulido como el de Windows
+- [ ] Catálogo/índice oficial curado de módulos recomendados (hoy el descubrimiento es vía `buscar_paquete` sobre GitHub, sin curaduría)
+- [ ] Módulos oficiales mantenidos por el proyecto
+- [ ] LSP: validación de sintaxis interna por comando, "ir a la definición"
+- [ ] Publicación directa de sitios generados a internet (hosting con un clic)
+- [ ] Importaciones entre archivos `.sipi` más maduras
+- [ ] Mejoras de IA integradas al editor (sugerencias contextuales)
 
-El lenguaje esta diseñado para que lo pueda usar literalmente cualquiera:
-desde un chico que recien empieza a programar, hasta un profesional de
-cualquier area, una startup, o un equipo tecnico de una empresa grande que
-necesite automatizar tareas, montar un sitio, prototipar una app o un juego
-rapido, o armar una herramienta interna sin fricciones. El motor de abajo es
-Python real, asi que todo lo que corre en SiPi es codigo real ejecutandose
-en tu maquina, sin cajas negras.
+## Licencia
 
-## Estructura del ZIP
+Propietaria — todos los derechos reservados. Solo el autor puede redistribuir el intérprete/código fuente de SiPi. Ver [`LICENSE`](LICENSE) para el texto completo.
+
+Nota: eso no impide que uses SiPi para hacer y distribuir tus propios programas — un `.sipi` que escribís vos, o un `.exe` que compilás con `generar_exe.py`, son tuyos y los repartís como quieras. La restricción es sobre el lenguaje/intérprete en sí, no sobre lo que la gente construya con él.
+
+## Estructura del proyecto
 
 ```
 SiPi/
-├── sipi.py                     <- el interprete (motor real del lenguaje)
-├── sipi.bat                     <- ejecutar archivos .sipi facilmente
-├── editor_sipi.py                <- editor visual (vista previa + config)
-├── editor.bat                     <- abre el editor visual
-├── generar_exe.py                  <- compilador real de .sipi a .exe
-├── compilar_programa.bat            <- compilar con un clic
-├── instalar.bat                      <- instala Python/dependencias
-├── ejecutar_ejemplo.bat                <- menu de ejemplos
-├── README.md
-└── ejemplos/
-    ├── hola_mundo.sipi
-    ├── calculadora_gui.sipi
-    ├── juego_simple.sipi
-    ├── juego_avanzado.sipi
-    ├── formulario_completo.sipi
-    ├── automatizacion.sipi
-    ├── generar_apps.sipi
-    ├── crear_sitio_web.sipi
-    ├── base_de_datos.sipi
-    ├── lista_tareas.sipi
-    ├── producto_con_errores.sipi
-    ├── modulo_utilidades.sipi
-    ├── usar_modulo.sipi
-    ├── panel_con_pestanias.sipi
-    ├── tres_en_raya.sipi
-    ├── juego_obstaculos_moviles.sipi
-    ├── agenda_contactos.sipi
-    ├── sonido_generado.sipi
-    ├── procesar_archivos_con_variables.sipi
-    ├── funciones_nuevas_v11.sipi
-    ├── inventario_json_csv.sipi
-    ├── tienda_sin_html.sipi
-    ├── formulario_contacto_web.sipi
-    ├── plataformas_fisica.sipi
-    ├── enemigos_ia_particulas.sipi
-    ├── automatizacion_escritorio.sipi
-    ├── galeria_imagenes.sipi
-    ├── calculadora_con_cuadro.sipi
-    ├── lista_dinamica_gui.sipi
-    ├── lista_menu_dinamicos.sipi
-    ├── panel_coordenadas_dinamicas.sipi
-    ├── sprites_posiciones_dinamicas.sipi
-    ├── funciones_recursivas.sipi
-    ├── estructuras_recursivas.sipi
-    ├── temporizadores.sipi
-    └── enum_y_estructuras.sipi
+├── sipi.py                 <- el intérprete (motor real del lenguaje)
+├── sipi.bat / sipi_cli.py   <- ejecutar archivos .sipi
+├── editor_sipi.py            <- editor visual
+├── generar_exe.py             <- compilador a .exe
+├── sipi_lsp.py                 <- servidor LSP
+├── vscode-sipi/                 <- extensión de VS Code
+├── tests/                        <- suite de pruebas automatizadas
+├── instalar.bat / instalar.sh
+├── ejemplos/                      <- programas de ejemplo (ver EXAMPLES.md)
+├── README.md                       <- este archivo
+├── DOCUMENTACION.md
+├── CHANGELOG.md
+├── LANGUAGE_SPEC.md
+├── SYNTAX.md
+├── FUNCTIONS.md
+├── EXAMPLES.md
+├── AI_GUIDE.md
+└── PROMPTS.md
 ```
 
-## Roadmap (proximas versiones)
-
-- Mas widgets (pestañas, menus desplegables).
-- Empaquetado automatico de proyectos Android dentro de un contenedor Linux
-  incluido, para no depender de WSL manual.
-- Depurador paso a paso integrado en el editor visual.
-- Libreria de sprites y sonidos de ejemplo incluida en el ZIP.
-- Publicacion directa de sitios generados a internet (hosting con un clic).
-- Modulos/importaciones entre archivos `.sipi`.
-
-— NovaLab Corporation
+— Epsilius (Novalab) Corporation

@@ -1,0 +1,19 @@
+Copyright (c) 2026 Mateo — Epsilius Corporation. Todos los derechos reservados.
+
+Este software (el intérprete de SiPi, su editor, sus herramientas asociadas
+y su código fuente, en conjunto "SiPi") es propiedad exclusiva de su autor.
+
+No se otorga permiso para copiar, redistribuir, publicar, sublicenciar
+ni distribuir SiPi ni el código fuente del intérprete, en su forma
+original o modificada, sin autorización expresa y por escrito del autor.
+
+Se permite el uso personal de SiPi para escribir, ejecutar y compilar
+programas propios en el lenguaje SiPi. Los programas escritos por
+terceros usando SiPi (archivos `.sipi` propios, y los ejecutables
+generados a partir de ellos con `generar_exe.py`) son propiedad de
+quien los escribe, y sí pueden distribuirse libremente — esta licencia
+restringe la redistribución del intérprete/lenguaje en sí, no la de las
+aplicaciones creadas con él.
+
+Para cualquier consulta sobre licenciamiento, uso comercial o
+autorización de redistribución, contactar al autor.
