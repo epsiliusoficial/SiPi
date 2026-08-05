@@ -1,0 +1,20 @@
+programa "TiposYFechasV41"
+
+// Tipos opcionales: si declaras el tipo, SiPi lo cuida en cada reasignacion.
+variable edad: entero = 20
+decir "Edad inicial: {edad}"
+sumar edad 5
+decir "Edad despues de sumar: {edad}"
+
+// Fechas
+fecha_sumar_dias "2026-01-01" 45 -> vencimiento
+decir "Vencimiento: {vencimiento}"
+fecha_diferencia_dias "2026-01-01" "{vencimiento}" -> dias_restantes
+decir "Dias entre fechas: {dias_restantes}"
+fecha_dia_semana "2026-07-25" -> nombre_dia
+decir "25/07/2026 es un: {nombre_dia}"
+
+// Audio (sin dependencias externas)
+audio_generar_tono 523 0.3 "nota_do.wav"
+audio_duracion "nota_do.wav" -> duracion_nota
+decir "Duracion de la nota generada: {duracion_nota} segundos"

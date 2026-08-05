@@ -1,4 +1,446 @@
-# SiPi v31.1.0
+# SiPi v40.0.0
+
+## Novedades de la version 40.0 — #22 de la lista: POO real, y 3 bugs serios corregidos
+
+### Sistema 1 — Programacion orientada a objetos real
+Nuevos comandos: `clase Nombre [hereda_de Padre] ... fin` (con campos
+por defecto y `metodo nombre(params) ... fin` adentro), `nuevo
+Clase(args) -> variable` (instancia y llama automaticamente a
+`constructor` si existe), `llamar_metodo objeto "nombre"(args) ->
+variable`, y `es_instancia_de objeto Clase -> variable`. Dentro de un
+metodo, el objeto esta disponible como la variable implicita `este`
+(como `self`/`this`), y como los objetos son diccionarios de Python
+reales, `diccionario_asignar este "campo" valor` modifica el objeto de
+verdad, no una copia. Soporta herencia real con sobreescritura de
+metodos (polimorfismo): probado con `Animal -> Perro/Gato`, cada uno
+con su propio `hacer_sonido()`, llamado a traves de un metodo heredado
+`describir()` definido solo en la clase base.
+
+### Refactor que previene bugs futuros de este mismo tipo
+Habia mas de 14 copias pegadas de la misma lista de "palabras que abren
+un bloque" repartidas por todo el archivo (la causa raiz de que
+`pagina_web`/`formulario` se hubieran desincronizado del formateador en
+una version anterior). Se unificaron todas en una sola constante
+(`BLOQUES_QUE_ABREN`), usada tambien por el formateador de codigo.
+
+### Bug encontrado al agregar clases: un campo llamado 'clase' rompia el conteo de bloques
+Al agregar `clase` como palabra reservada, se rompio cualquier programa
+que ya tuviera un campo o variable llamado literalmente `clase` (muy
+comun, ej. `estructura Personaje` con un campo `clase = 0`), porque el
+detector de bloques confundia esa asignacion con la apertura de un
+bloque real. Corregido: una linea tipo `palabra = valor` nunca se
+cuenta como apertura de bloque, aunque 'palabra' coincida con una
+palabra reservada. Se agrego una prueba automatizada especifica para
+este caso.
+
+### Bug serio encontrado: concatenar texto con numeros fallaba en silencio
+`"Puntaje: " + puntaje` (texto + numero) tiraba un `TypeError` de
+Python por dentro y se devolvia el texto crudo sin evaluar - uno de los
+patrones mas comunes que escribe cualquier persona. Corregido con un
+evaluador de expresiones propio (basado en el modulo `ast`) que
+convierte numeros a texto al concatenar con `+`, como se espera en un
+lenguaje pensado para principiantes.
+
+### Bug de fondo mas serio encontrado esta ronda: la sustitucion de variables corrompia texto dentro de strings
+Al arreglar el bug anterior aparecio uno mas profundo, presente desde
+siempre: la sustitucion de nombres de variable por su valor se hacia
+con una unica pasada de regex sobre TODA la expresion, sin distinguir
+que partes eran codigo y cuales eran texto literal. Resultado: si un
+string literal contenia una palabra que tambien era el nombre de una
+variable (ej. la variable `vida` y el texto `" de vida"`), esa palabra
+DENTRO del texto se reemplazaba por el valor de la variable
+(`"Rex tiene 100 de vida"` se convertia en `"Rex tiene 100 de 100"`).
+Corregido haciendo que la sustitucion respete los limites de los
+strings literales (comillas), igual que ya hacia el buscador de
+llamadas a funciones. Se agregaron pruebas automatizadas para los tres
+bugs de esta ronda; la bateria completa paso de 14 a 17 pruebas.
+
+
+
+## Novedades de la version 39.0 — Bug reportado corregido + #20 de la lista: pruebas automatizadas
+
+### Bug reportado y corregido: el formateador de codigo no indentaba bien `pagina_web`/`formulario`
+Revisando el area de `sipi.py` que reportaste (cerca de las lineas
+3460 y 3487, la funcion `formatear_codigo` y sus tablas de palabras
+clave), se encontro que `PALABRAS_APERTURA_BLOQUE` -la lista que usa
+`--formatear` para saber que comandos abren un bloque y necesitan
+indentar lo que sigue- **no incluia `pagina_web` ni `formulario`**,
+aunque en el resto del interprete (`_encontrar_fin`, en 15 lugares
+distintos) si se los trata como bloques reales. Resultado: formatear un
+programa con paginas web o formularios dejaba todo el contenido al
+mismo nivel de indentacion, sin importar cuantos bloques anidados
+tuviera. Se confirmo que el bug ya estaba presente en la v29 original.
+Corregido agregando esas dos palabras a la lista; probado con un
+`pagina_web` que contiene un `formulario` anidado y ahora indenta
+correctamente en 2 niveles.
+
+### Pruebas automatizadas reales (`sipi test`)
+Nuevo `tests/test_suite.py` (solo libreria estandar, sin dependencias
+externas) con 14 pruebas automatizadas que ejecutan programas `.sipi`
+reales contra el motor real y comparan la salida, cubriendo los bugs
+mas importantes corregidos a lo largo de todas las versiones:
+recursion profunda, llamadas a funciones dentro de expresiones
+(anidadas incluso), concatenacion de texto de tres partes, division
+por cero, variables no declaradas, `romper`/`continuar` (incluyendo el
+caso de que no se escapen de una funcion sin bucle propio), errores
+propios con `lanzar_error`, constantes, programacion funcional sobre
+listas, el formateador de `pagina_web`/`formulario`, y SQLite real.
+
+Se puede correr con:
+```
+sipi test
+```
+o directamente `python3 tests/test_suite.py`. Sirve como red de
+seguridad real: si un cambio futuro reintroduce alguno de estos bugs ya
+solucionados, estos tests lo van a detectar en segundos en vez de que
+alguien lo encuentre por casualidad meses despues. `publicar.py` ahora
+tambien incluye la carpeta `tests/` en las distribuciones.
+
+
+
+## Novedades de la version 38.0 — #10 y #11 de la lista: modo principiante y documentacion interactiva
+
+### Bug real encontrado (al escribir el tutorial): las comillas no se pueden escapar dentro de un texto
+Al escribir el tutorial interactivo se encontro que `\"` dentro de un
+string no funciona como escape: SiPi lo deja tal cual (con la barra
+invertida incluida) en vez de interpretarlo como una comilla literal.
+Es una limitacion real del tokenizador de strings actual. Se documento
+en `DOCUMENTACION.md` con la solucion practica (usar comillas simples
+`'` para el texto anidado) para que nadie mas pierda tiempo con esto.
+
+### Documentacion interactiva (`ayuda`)
+Nuevo comando del lenguaje `ayuda "nombre_comando"`, usable desde
+cualquier programa `.sipi`, con resumen + ejemplo real para ~35 de los
+comandos mas usados (variables, condicionales, bucles, funciones,
+listas, SQLite, API web, modulos, etc.), con sugerencia automatica de
+comandos parecidos si hay un typo. `ayuda` sin argumentos lista los
+comandos con ficha disponible.
+
+Tambien desde la terminal:
+```
+sipi ayuda mostrar sqlite_conectar
+sipi ayuda buscar sqlite
+```
+
+### Modo principiante (`modo_principiante`)
+Nuevo comando `modo_principiante`: cuando esta activo, si el programa
+falla con alguno de los errores mas comunes para quien recien empieza
+(variable no declarada, division por cero, comando desconocido, falta
+un `fin`, funcion no definida, modificar una constante), SiPi agrega un
+consejo en lenguaje simple explicando como solucionarlo, ademas del
+mensaje de error tecnico. Sin `modo_principiante` activado, el
+comportamiento no cambia (para no ser repetitivo con usuarios
+avanzados).
+
+### Tutorial interactivo (`sipi tutorial`)
+Nuevo `ejemplos/tutorial_interactivo.sipi` y subcomando `sipi tutorial`:
+un recorrido guiado y realmente ejecutable por variables, operaciones,
+condicionales, bucles, funciones, listas y manejo de errores, con
+`modo_principiante` activado. Pensado como primer contacto con SiPi
+antes de leer `DOCUMENTACION.md`.
+
+
+
+## Novedades de la version 37.0 — #7 y #8 de la lista: CLI profesional y proyectos estructurados
+
+Nuevo `sipi_cli.py` (con `sipi_cli.bat` para Windows), una interfaz de
+linea de comandos real con subcomandos, en vez de tener que recordar
+que archivo `.py`/`.bat` corresponde a cada tarea:
+
+```
+sipi ejecutar archivo.sipi      Ejecuta un programa SiPi
+sipi crear nombre_proyecto      Crea un proyecto nuevo con estructura estandar
+sipi compilar archivo.sipi      Compila un programa a un ejecutable .exe
+sipi instalar nombre_o_url      Instala un modulo .sipi
+sipi instalar --dependencias    Instala todo lo declarado en sipi_paquetes.json
+sipi publicar                   Genera la carpeta PUBLICACION/ lista para distribuir
+sipi ayuda                      Muestra la ayuda
+```
+
+- `sipi crear` arma un proyecto con estructura estandar
+  (`main.sipi`, `ejemplos/`, `modulos_instalados/`, `sipi_paquetes.json`,
+  `README.md`), en vez de tener que armar las carpetas a mano.
+- Los demas subcomandos son una capa fina sobre lo que ya existia
+  (`sipi.py`/`sipi_protegido.py`, `generar_exe.py`, `_instalar_modulo`,
+  `publicar.py`), reutilizando la logica real en vez de duplicarla, y
+  ya distinguen automaticamente entre carpeta de desarrollo y carpeta
+  publicada (protegida).
+- `publicar.py` ahora tambien incluye `sipi_cli.py`/`sipi_cli.bat` en la
+  carpeta `PUBLICACION/`, asi que el CLI queda disponible para quien
+  reciba tu proyecto ya compilado/protegido, no solo en desarrollo.
+
+Se probaron los 6 subcomandos de punta a punta: crear un proyecto nuevo
+y ejecutarlo, instalar un modulo real desde un servidor HTTP (tanto
+suelto como via `sipi_paquetes.json`), compilar (llega correctamente a
+PyInstaller), publicar, y ayuda — incluyendo la verificacion de que
+`sipi ejecutar`/`sipi ayuda` funcionan igual dentro de una carpeta ya
+publicada (usando `sipi_protegido.py`).
+
+
+
+## Novedades de la version 36.0 — #6 de la lista: depurador visual corregido y completado
+
+El depurador visual (`VentanaDepurador`, con breakpoints, paso a paso y
+panel de variables) ya existia, pero al revisarlo a fondo se
+encontraron y corrigieron dos bugs reales, ademas de completar una
+funcionalidad que faltaba:
+
+### Bug critico: el boton "⏹ Detener" no detenia nada si el programa estaba dentro de una funcion
+El mecanismo para cortar la ejecucion usaba la misma excepcion que
+`devolver` (`RetornoFuncion`). Si el usuario apretaba "Detener" mientras
+el programa estaba corriendo *dentro de una llamada a funcion* (el caso
+mas comun en cualquier programa real), esa funcion atrapaba la señal de
+corte como si fuera un simple `devolver` y **el programa seguia
+corriendo hasta el final**, ignorando el boton. Se probo especificamente
+este escenario (breakpoint dentro del bucle de una funcion) y se
+confirmo que el hilo de ejecucion seguia vivo despues de apretar
+"Detener". Se corrigio agregando una excepcion dedicada
+(`DepuracionDetenida`) que ninguna llamada a funcion puede confundir con
+un retorno normal. Vuelto a probar: ahora el hilo termina de verdad en
+cuanto se aprieta "Detener", incluso en medio de una funcion.
+
+### Bug menor: el mensaje final decia "terminado correctamente" aunque el usuario lo hubiera detenido a mano
+Corregido para que, si el usuario detuvo la sesion, el mensaje final
+diga "Sesion de depuracion detenida por el usuario" en vez de sugerir
+que el programa termino solo.
+
+### Completado: variables locales en el panel "Variables en vivo"
+Antes el panel solo mostraba variables globales; dentro de una funcion
+aparecia vacio o incompleto aunque la funcion tuviera sus propias
+variables. Ahora se muestran por separado "Variables locales (funcion
+actual)" y "Variables globales". Probado deteniendose dentro de una
+funcion con parametro `n` y variable local `i`: ambas aparecen
+correctamente en el panel.
+
+Todo lo anterior se probo de punta a punta con un display virtual
+(Xvfb) simulando la interaccion real del usuario con la ventana del
+depurador (breakpoints, paso a paso, continuar, detener).
+
+
+
+## Novedades de la version 35.0 — #4 y #5 de la lista: autocompletado y resaltado de sintaxis real
+
+### Bug de documentacion encontrado y corregido
+`DOCUMENTACION.md` (agregada en la v32.1) decia que los comentarios se
+escriben con `#`. Es incorrecto: SiPi usa `//` para comentarios de una
+linea y `/* ... */` para comentarios de bloque (`#` ni siquiera es un
+comando valido, tira error). Se probo explicitamente y se corrigio la
+documentacion.
+
+### Bug real encontrado en el editor: el resaltado de sintaxis estaba desactualizado
+El editor tenia una lista de palabras clave (`PALABRAS_CLAVE`) copiada a
+mano, separada de la lista real de comandos del interprete
+(`COMANDOS_CONOCIDOS` en `sipi.py`). Con el tiempo se desincronizaron:
+**26 comandos reales** (`romper`, `continuar`, todos los de
+`sqlite_*`, `escuchar_ruta`, `iniciar_api_web`, `tipo_de`,
+`lanzar_error`, `instalar_modulo`, `listar_modulos`, los `lista_*`
+funcionales, etc.) nunca se coloreaban en el editor porque no estaban en
+esa lista vieja.
+
+**Corregido de raiz, no solo parchado**: el editor ahora carga
+`PALABRAS_CLAVE` dinamicamente desde `COMANDOS_CONOCIDOS` del motor real
+(via `_cargar_motor_sipi`, que ya distingue entre `sipi.py` y
+`sipi_protegido.py`), asi que el resaltado de sintaxis nunca puede
+volver a desactualizarse cuando se agregue un comando nuevo. Se dejo una
+lista de respaldo fija por si el motor no se puede cargar. Verificado:
+`sqlite_conectar`, `romper` y `tipo_de` ahora se resaltan correctamente,
+y la lista completa paso de 151 a 178 comandos reconocidos.
+
+### Autocompletado real (nuevo)
+El editor ahora muestra un menu de autocompletado mientras se escribe
+(a partir de 2 caracteres), con sugerencias de:
+- Comandos del lenguaje (los mismos 178, siempre sincronizados).
+- Variables declaradas en el programa actual (detectadas leyendo el
+  codigo: `variable`/`var`/`const`).
+- Funciones definidas en el programa actual (`funcion nombre(...)`).
+
+Se navega con las flechas ↑/↓, se acepta con Tab o Enter, y se cierra
+con Escape. Probado de punta a punta bajo un display virtual (Xvfb):
+escribir "repe" y aceptar con Tab completa a "repetir"; escribir "res"
+con una variable "resultado" ya declarada la sugiere junto a los
+comandos "restar" y "responder_json".
+
+
+
+## Novedades de la version 34.0 — #3 de la lista: mejor manejo de errores
+
+### Bug de fondo encontrado y corregido: typos en variables pasaban totalmente desapercibidos
+Se encontro que usar una variable no declarada (por un typo, por
+ejemplo `nombree` en vez de `nombre`) **nunca daba error**: tanto dentro
+de interpolacion de texto (`decir "Hola {nombree}"`) como en una
+expresion suelta (`variable r = nombree_que_no_existe`), SiPi
+silenciosamente imprimia el NOMBRE de la variable como si fuera un
+texto literal, en vez de avisar que no existia. Esto podia esconder
+bugs reales por mucho tiempo, porque el programa "corria" sin
+quejarse y mostraba datos incorrectos en vez de fallar.
+
+**Corregido**: ahora usar una variable no declarada da un error claro:
+```
+[SiPi] ERROR: Variable no declarada: 'nombree'. ¿Quisiste decir 'nombre'?
+```
+Si hay una variable o funcion parecida definida en el programa, SiPi la
+sugiere automaticamente (usando la misma logica de sugerencias que ya
+existia para comandos mal escritos). Si no hay ninguna parecida, sugiere
+como declararla.
+
+### División por cero con mensaje claro
+Antes, dividir por cero tambien caia en el mismo camino silencioso y
+devolvia texto sin evaluar. Ahora da un mensaje directo:
+```
+[SiPi] ERROR: Division por cero al evaluar la expresion 'a / b'.
+```
+
+### Compatibilidad verificada
+Se corrio toda la bateria de ejemplos incluidos (mas de 12 programas
+distintos: agenda, automatizacion, sitio web, formularios, JSON/CSV,
+modulos, listas de tareas, manejo de errores, etc.) para confirmar que
+este cambio, al ser mas estricto, no rompe ningun programa existente
+que ya declaraba bien sus variables.
+
+
+
+## Novedades de la version 33.0 — Otro bug critico corregido + paquetes con dependencias
+
+### Bug critico encontrado y corregido: concatenacion de texto rota desde siempre
+Se encontro (probando el sistema de modulos con una funcion tipica de
+saludo) que **cualquier concatenacion de la forma `"texto" + variable +
+"texto"` estaba rota desde la v29**: como la expresion completa empieza
+y termina con comillas, el evaluador la confundia con un unico string
+literal y devolvia el texto crudo sin evaluar, por ejemplo:
+```
+devolver "Hola " + nombre + " desde aca!"
+```
+imprimia literalmente `Hola " + nombre + " desde aca!` en vez de
+`Hola Mateo desde aca!`. Se confirmo que el bug ya estaba presente en la
+v29 original (no fue introducido por cambios recientes). **Corregido de
+raiz**: ahora se verifica que la comilla de apertura realmente cierre
+justo al final de la expresion (no solo que el primer y ultimo caracter
+sean comillas) antes de tratarla como un literal simple.
+
+### Bug corregido: `editor_protegido.py` buscaba `sipi.py` en vez de `sipi_protegido.py`
+Reportado directamente: al generar `editor_protegido.py` con
+`proteger_codigo.py`/`publicar.py`, los botones "▶ Ejecutar", "Compilar
+a .exe", la vista previa en vivo, el formateador de codigo y el
+depurador visual tenian la ruta al motor fija a `sipi.py` (en 2 casos,
+con un `import sipi` directo), que no existe en una carpeta ya
+publicada (solo existe `sipi_protegido.py`). Se agregaron
+`_ruta_motor_sipi()` / `_ruta_generar_exe()` / `_cargar_motor_sipi()`
+que resuelven el archivo correcto segun la carpeta, y se verifico
+generando una `PUBLICACION/` real y confirmando que el editor protegido
+carga el motor protegido sin error.
+
+### Sistema de paquetes mas solido (parte del pedido de la lista)
+- `listar_modulos` — lista los modulos ya instalados (con su origen y
+  fecha de instalacion), o los guarda en una variable con
+  `listar_modulos -> variable`.
+- `desinstalar_modulo "nombre"` — elimina un modulo instalado y lo saca
+  del registro.
+- `instalar_dependencias` — lee un manifiesto `sipi_paquetes.json` (el
+  equivalente de un `package.json`/`requirements.txt` para SiPi) con
+  formato `{"modulos": {"nombre": "url_o_nombre"}}`, e instala
+  automaticamente todas las dependencias declaradas del proyecto en una
+  sola instruccion, sin tener que escribir un `instalar_modulo` por
+  cada una. Probado de punta a punta con un servidor HTTP local real
+  sirviendo un modulo `.sipi`, incluyendo el manejo de errores cuando
+  una dependencia no se puede descargar (sigue con las demas y avisa
+  cuales fallaron al final).
+
+
+
+## Novedades de la version 32.2 — Bug corregido: `editor_protegido.py` buscaba `sipi.py` en vez de `sipi_protegido.py`
+
+### El bug (reportado directamente)
+Al usar `proteger_codigo.py` (o `publicar.py`), se generaba
+`editor_protegido.py` correctamente, pero al abrirlo en una carpeta
+publicada (donde solo existe `sipi_protegido.py`, sin el `sipi.py`
+original) el editor fallaba: los botones "▶ Ejecutar", "Compilar a
+.exe", la vista previa en vivo, el formateador de codigo y el depurador
+visual paso a paso tenian la ruta al motor **fija a `sipi.py`** (y en un
+caso, un `import sipi` directo por nombre de modulo), asi que no
+encontraban nada en una carpeta publicada.
+
+### La correccion
+- Se agrego `_ruta_motor_sipi()` / `_ruta_generar_exe()`: resuelven el
+  archivo correcto (`sipi.py`/`generar_exe.py` en desarrollo,
+  `sipi_protegido.py`/`generar_exe_protegido.py` en una carpeta
+  publicada) y se usan en la vista previa en vivo, en "▶ Ejecutar" y en
+  "Compilar a .exe".
+- Se agrego `_cargar_motor_sipi()`: importa el motor con
+  `importlib.util` bajo un nombre de modulo interno consistente, en vez
+  de depender de `import sipi` (que fallaba con
+  `ModuleNotFoundError: No module named 'sipi'` en cualquier carpeta
+  donde el archivo se llamara `sipi_protegido.py`). Se uso en el
+  formateador de codigo y en el depurador visual paso a paso.
+- **Verificado especificamente el escenario del bug**: se genero
+  `PUBLICACION/` con `publicar.py`, se copio a una carpeta limpia sin
+  `sipi.py`, y se confirmo que `editor_protegido.py` ahora encuentra y
+  carga `sipi_protegido.py` correctamente (antes de la correccion,
+  esto fallaba porque en esa carpeta no existe ningun archivo llamado
+  `sipi.py`).
+
+
+
+## Novedades de la version 32.1 — Documentacion oficial completa
+
+Se agrego `DOCUMENTACION.md`: guia de instalacion, tutorial desde cero
+(hola mundo -> variables -> condicionales -> bucles -> funciones y
+recursion -> listas/programacion funcional -> manejo de errores), guia
+de sintaxis, referencia completa de comandos organizada por categoria
+(control de flujo, listas/diccionarios/matrices, texto, numeros,
+archivos/SQLite, web/API, GUI de escritorio, juegos 2D, sistema), y
+ejemplos por nivel apuntando a la carpeta `ejemplos/`. Todo el contenido
+del tutorial fue probado linea por linea en esta misma sesion antes de
+documentarlo.
+
+
+
+## Novedades de la version 32.0 — Bug critico corregido: llamadas a funciones dentro de expresiones
+
+### El bug mas importante encontrado hasta ahora
+Se encontro (probando recursion real) que **llamar a una funcion dentro de
+una expresion nunca funciono**: cosas tan basicas como
+
+```
+variable r = doble(5)
+```
+o
+```
+variable r = contar_hasta(n - 1)
+devolver r + 1
+```
+
+no lanzaban un error: simplemente devolvian el TEXTO sin evaluar
+("doble(5)") en vez del resultado real, porque el evaluador de
+expresiones no sabia reconocer una llamada a funcion embebida — solo
+funcionaba `llamar_valor funcion(args) -> variable` como instruccion
+separada. Esto rompia en silencio cualquier funcion recursiva real
+(fibonacci, factorial, recorridos, etc.) apenas se armaba con una
+expresion en vez de un `llamar_valor` explicito.
+
+**Corregido de raiz**: el evaluador de expresiones ahora reconoce
+llamadas a funciones SiPi definidas por el usuario en cualquier parte de
+una expresion — anidadas, combinadas con operadores, dentro de
+condiciones (`si`), dentro de interpolacion de texto (`"{funcion(x)}"`),
+etc. Probado con: `doble(5)`, `suma_uno(doble(3))` (anidada, da 7),
+`si es_mayor(edad)`, e interpolacion `"Hola {saludo(nombre)}"`.
+
+### Recursion real y profunda, sin segfaults
+Al arreglar el bug anterior, aparecio el siguiente problema real:
+la recursion profunda (miles de niveles) tiraba
+`maximum recursion depth exceeded` con Python. Ahora:
+- El programa corre en un hilo con una pila de sistema operativo de
+  512 MB y un limite de recursion de Python mucho mas alto, para que la
+  recursion real de SiPi pueda llegar bastante mas profundo sin
+  arriesgarse a un segfault (que es lo que pasaria si solo se subiera
+  `sys.setrecursionlimit` sin agrandar tambien la pila).
+- Probado con 5.000 y 20.000 niveles de recursion real sin fallar.
+- Si aun asi se llega al limite, el mensaje de error ahora es humano
+  ("la funcion se llamo a si misma demasiadas veces...") en vez de un
+  traceback de Python, y la pila de llamadas impresa se recorta a los
+  ultimos 12 niveles (con un aviso de cuantos mas hay) para no saturar
+  la pantalla con miles de lineas repetidas.
+
+
 
 ## Novedades de la version 31.1 — Bugs reales de control de flujo + excepciones propias
 
@@ -1041,4 +1483,4 @@ SiPi/
 - Publicacion directa de sitios generados a internet (hosting con un clic).
 - Modulos/importaciones entre archivos `.sipi`.
 
-— Epsilius Oficial
+— NovaLab Corporation

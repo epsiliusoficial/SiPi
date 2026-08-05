@@ -1,0 +1,20 @@
+programa "PipeOperatorV41_22"
+
+funcion es_par(x)
+    devolver x % 2 == 0
+fin
+funcion doble(x)
+    devolver x * 2
+fin
+
+lista_crear numeros
+lista_agregar numeros 1
+lista_agregar numeros 2
+lista_agregar numeros 3
+lista_agregar numeros 4
+lista_agregar numeros 5
+lista_agregar numeros 6
+
+// Encadena filtrar -> mapear -> sumar sin variables temporales
+variable resultado = numeros |> lista_filtrar(es_par) |> lista_mapear(doble) |> suma_lista
+decir "Suma de pares duplicados: {resultado}"

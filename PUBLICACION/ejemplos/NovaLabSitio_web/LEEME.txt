@@ -1,0 +1,7 @@
+SITIO WEB: NovaLabSitio
+Generado por SiPi - 100% real y editable.
+
+Para verlo, abri "index.html" con doble clic (se abre en tu navegador), o desde
+SiPi corre:  iniciar_servidor_web "NovaLabSitio_web" 8000
+
+Esto sirve la carpeta como un sitio web real en http://localhost:8000

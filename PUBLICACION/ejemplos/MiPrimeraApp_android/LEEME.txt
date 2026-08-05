@@ -1,0 +1,33 @@
+PROYECTO ANDROID: MiPrimeraApp
+Generado por SiPi - 100% real y funcional.
+
+Esta carpeta contiene:
+  - generar_apps.sipi   -> TU programa real, tal cual lo escribiste.
+  - sipi_motor.py            -> el motor/interprete completo de SiPi, embebido.
+  - main.py                  -> la app Kivy que carga y corre tu programa de verdad
+                                 al tocar "Ejecutar programa", mostrando en pantalla
+                                 todo lo que imprimas con 'decir'.
+  - buildozer.spec           -> configuracion de compilacion a APK.
+
+Este es un proyecto Kivy completo y listo para compilar a APK real, que ejecuta
+TU LOGICA, no una demo generica.
+
+COMO GENERAR EL APK (requiere Linux o WSL en Windows 10):
+1. Instala WSL en Windows 10: abre PowerShell como administrador y ejecuta:
+   wsl --install
+2. Dentro de WSL (Ubuntu), instala buildozer:
+   sudo apt update && sudo apt install -y python3-pip git zip openjdk-17-jdk
+   pip install buildozer cython
+3. Copia esta carpeta dentro de WSL y entra en ella:
+   cd MiPrimeraApp_android
+4. Compila el APK:
+   buildozer android debug
+5. El archivo .apk real aparecera en la carpeta bin/, listo para instalar en cualquier
+   celular Android (activa "Origenes desconocidos" para instalarlo).
+
+Nota honesta: compilar un APK requiere el SDK de Android y herramientas de compilacion
+que ocupan varios GB y no pueden empaquetarse dentro de un .zip. Por eso SiPi te genera
+el CODIGO REAL Y COMPLETO del proyecto (main.py + sipi_motor.py + tu programa +
+buildozer.spec) listo para compilar, en vez de simular un boton "instalar automaticamente"
+que en realidad no podria funcionar
+sin esas herramientas del sistema.
