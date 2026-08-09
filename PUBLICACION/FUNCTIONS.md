@@ -146,6 +146,64 @@ Tabla completa de comandos del lenguaje, organizada por categoría. Para sintaxi
 | `generar_app_android` / `generar_app_windows` | Empaquetado de apps |
 | `modo_debug` | Activa impresion de cada linea ejecutada, para depurar |
 
+## Concurrencia (hilos reales)
+
+Threads reales de sistema operativo (`threading` de Python por dentro), no cooperativos. **Importante:** cada hilo trabaja con su propia copia de las variables globales tomada al momento de crearlo — no comparten estado en vivo con el resto del programa (ver `KNOWN_ISSUES.md` para el porqué). Comunicá resultados con `devolver`/`hilo_resultado`, no con variables globales.
+
+| Comando | Qué hace |
+|---|---|
+| `hilo_crear funcion(args) -> id_hilo` | Corre una función en un hilo real, en paralelo, sin bloquear el resto del programa |
+| `hilo_esperar id_hilo` | Bloquea hasta que ese hilo termine |
+| `hilo_resultado id_hilo -> var` | Espera si hace falta y guarda lo que devolvió el hilo |
+| `hilo_esta_vivo id_hilo -> var` | Revisa si sigue corriendo, sin bloquear |
+| `hilo_esperar_todos` | Bloquea hasta que todos los hilos creados hasta ahora terminen |
+| `bloqueo_crear nombre` | Crea un candado (lock) real para sincronizar acceso a un recurso compartido (archivo, conexión) |
+| `con_bloqueo nombre ... fin` | Ejecuta el bloque con el candado tomado; se libera solo al salir, incluso si hay un error adentro |
+
+```sipi
+funcion descargar(url)
+    peticion_http url -> respuesta
+    devolver respuesta
+fin
+
+hilo_crear descargar("https://ejemplo.com/a") -> h1
+hilo_crear descargar("https://ejemplo.com/b") -> h2
+hilo_resultado h1 -> resultado_a
+hilo_resultado h2 -> resultado_b
+```
+
+## Corrector automático y revisor de código (CLI)
+
+Estos no son comandos dentro de un programa `.sipi`, son banderas de línea de comandos de `sipi.py`:
+
+| Comando | Qué hace |
+|---|---|
+| `python sipi.py archivo.sipi` | Ejecuta el programa normalmente. Si encuentra errores tipográficos chicos (espacios de más, comillas curvas, un punto suelto, un comando mal escrito por poco como `decid`→`decir`), los corrige **en memoria** para esa corrida y te dice exactamente qué corrigió — el archivo en disco no cambia. |
+| `python sipi.py --corregir archivo.sipi` | Corre el mismo corrector, pero **guarda** la versión corregida de vuelta en el archivo. Te lista todo lo que cambió antes de guardar. |
+| `python sipi.py --revisar archivo.sipi` | Analiza el código (sin ejecutarlo) y da un reporte de seguridad, posibles bugs, estilo y sugerencias — ver detalle abajo. |
+| `python sipi.py --formatear archivo.sipi` | Reindenta el archivo con 4 espacios por nivel (ya existía, ver `DOCUMENTACION.md`). |
+| `python sipi.py --repl` (o `python sipi.py` sin argumentos) | Abre una consola interactiva: escribís código SiPi línea por línea y se ejecuta al toque, manteniendo variables/funciones/clases entre líneas. Soporta bloques multilínea (`si`/`funcion`/etc. se completan solos hasta su `fin`) y evalúa expresiones sueltas automáticamente (`2 + 2` imprime `4`, sin necesitar `decir`). También corrige y avisa errores tipográficos como en una ejecución normal. Salís con `salir`, `exit` o Ctrl+D. |
+| `python sipi.py --depurar archivo.sipi` | Ejecuta el programa mostrando cada línea antes de correrla (igual que poner `modo_debug` como primera línea, pero sin editar el archivo). Combinable con `--sin-cache`. |
+
+Todo esto también está disponible desde `sipi_cli.py` (o el comando `sipi` si lo tenés instalado así): `sipi repl`, `sipi corregir archivo.sipi`, `sipi analizar archivo.sipi`, `sipi depurar archivo.sipi`, `sipi formato archivo.sipi`, `sipi probar` (alias de `sipi test`).
+
+### ¿Qué corrige el corrector automático?
+
+- Espacios dobles/triples entre palabras (nunca dentro de un texto entre comillas — ahí el espacio es una decisión tuya).
+- Comillas "curvas" (las que pone Word o el teclado del celular) cambiadas por comillas rectas, las únicas válidas en SiPi.
+- Un punto suelto al final de una línea, que no forma parte de ningún texto.
+- Espacios/tabs sobrantes al final de una línea.
+- Un comando mal escrito por muy poco (ej. `decid` en vez de `decir`), **solo** cuando hay una única opción razonable — si es ambiguo, no toca nada y te deja el error normal de "comando desconocido" para que decidas vos.
+
+### ¿Qué mira `--revisar`?
+
+- **🔒 Seguridad:** credenciales escritas directo en el código (usar `variable_entorno` en su lugar), `hash_texto` usado sobre algo que parece una contraseña (usar `hash_seguro_contrasena`), consultas SQL armadas interpolando una variable directo en el texto (riesgo de inyección SQL).
+- **🐛 Posibles bugs:** bloques `capturar` vacíos (un error que se atrapa pero no se hace nada con él), variables declaradas y nunca usadas, funciones definidas y nunca llamadas.
+- **🎨 Estilo:** funciones muy largas, bloques anidados muchos niveles, comentarios `TODO`/`FIXME` que quedaron pendientes.
+- **💡 Sugerencias:** operaciones riesgosas (archivos, red, bases de datos) sin ningún `intentar`/`capturar` en todo el programa; programas grandes sin ninguna prueba automatizada (`afirmar`).
+
+Es un análisis básico y honesto sobre su propio alcance: agarra los problemas más comunes y más caros de cometer, no reemplaza revisar el código con atención vos mismo.
+
 ## Nota sobre esta referencia
 
 Las categorías de Ventanas/Juegos/Web cubren muchísimos parámetros propios de cada bloque (por ejemplo, las opciones exactas de `sprite` o `tarjeta`). La forma más confiable de ver la sintaxis exacta de cada uno es mirar los ejemplos ya funcionando en la carpeta `ejemplos/`, que están probados y corren tal cual.

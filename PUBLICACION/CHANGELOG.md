@@ -6,6 +6,56 @@ Todas las versiones, de la mas nueva a la mas vieja. Antes de la v31 el desarrol
 
 ---
 
+## Novedades v41.28 (feedback, quinta tanda: pestañas multi-archivo)
+
+- **P3 #14: pestañas.** El editor ahora soporta varios `.sipi` abiertos a la vez, cada uno con su propio contenido, archivo y estado de "modificado" aislado (un solo widget de texto compartido internamente; el contenido de la pestaña inactiva se guarda en memoria al cambiar, no se pierde). Barra de pestañas arriba del editor, con `+` para nueva pestaña y `✕` para cerrar cada una.
+  - `Ctrl+T` nueva pestaña, `Ctrl+W` cierra la actual.
+  - "Abrir" un archivo ya abierto en otra pestaña cambia a esa pestaña en vez de duplicarla.
+  - Cerrar una pestaña con cambios sin guardar pregunta antes (igual que cerrar el editor entero); cerrar la última pestaña deja una pestaña "Sin título" fresca en vez de una ventana sin ninguna.
+  - Cerrar el editor completo ahora revisa **todas** las pestañas por cambios sin guardar, no solo la activa (antes de esta version no existia el concepto de "otra pestaña" asi que no aplicaba).
+  Verificado con una suite de tests dedicada bajo Xvfb: aislamiento de contenido entre pestañas, guardado, detección de archivo ya abierto, cierre con/sin cambios pendientes, y que nunca queda en 0 pestañas. Encontré y corregí dos bugs propios en el camino (un `def` que se borró sin querer en un `str_replace`, un `padx` con tupla inválido para `tk.Label`) — ambos atrapados por la propia suite de tests antes de entregar. Se re-corrieron también las suites de las tandas anteriores (indicador de cambios, ejecutar sin guardar, F11, recuperación) y la regresión completa del motor (35/35) para confirmar que nada se rompió.
+
+---
+
+## Novedades v41.27 (feedback, cuarta tanda: benchmarks oficiales)
+
+- **P2/rendimiento #65: benchmarks oficiales.** Nuevo `benchmarks.py` (y `sipi benchmarks` desde el CLI) mide el motor real en 6 categorias pedidas explicitamente: bucles, funciones/recursion, strings, listas, archivos y concurrencia (hilos reales). Cada benchmark es un programa `.sipi` real generado y corrido con el interprete real (no numeros inventados), con `--sin-cache` para medir parseo+ejecucion, `--repeticiones N` para promediar, y `--json salida.json` para poder diffear entre versiones en CI. Encontrados y corregidos en el proceso: sintaxis incorrecta de `hilo_crear` en mi primer intento (confirmado contra `tests/test_suite.py`, la fuente de verdad) y ruido de salida de los programas de benchmark tapando los resultados (ahora se silencia con `contextlib.redirect_stdout`, la ejecucion real sigue intacta). Verificado con la suite de regresion completa (35/35) antes y despues, mas una corrida real de las 6 categorias con salida y JSON inspeccionados a mano.
+
+---
+
+## Novedades v41.26 (feedback, tercera tanda: motor de errores)
+
+- **P2 #26: sistema de errores con puntero, formato pedido explícitamente en el feedback.** Antes: `Error en linea 14: <mensaje>` en una sola línea. Ahora `SiPiError` guarda línea, archivo y texto de la línea junto con el mensaje, y el punto de salida final arma:
+  ```
+  [SiPi] Error en programa.sipi:4
+
+  4 | decir x / y
+                 ^
+
+  Division por cero al evaluar la expresion 'x / y'.
+  ```
+  Verificado corriendo la suite de regresión completa (35/35 tests, sin tocar ninguno) antes y después del cambio, más dos casos reales nuevos (división por cero, variable no declarada) ejecutados de punta a punta. El puntero apunta al final de la línea (no columna exacta del token que falló) porque esa granularidad no está disponible en la mayoría de los puntos donde se lanza un error hoy — mejora futura si se separa lexer/parser/AST (#23-25), que sí llevaría posición por token.
+
+---
+
+## Novedades v41.25 (sesion de feedback de 106 items)
+
+Primera tanda: bugs P0 y UX P1 del feedback del tester externo, verificados corriendo el editor real (Xvfb + tkinter) y el CLI real, no solo revisando el codigo.
+
+- **P0 #1/#3: bug de Windows `[Errno 2] No such file or directory` con `sipi_protegido.py`.** Causa confirmada reproduciendo el escenario (correr SiPi desde una copia dentro de la carpeta Temp de Windows, tipico de abrir el `.zip` sin extraer). `editor_sipi.py` y `sipi_cli.py` ahora detectan esto al arrancar y avisan con causa y solucion antes de que se rompa algo.
+- **P0 #4: manejo de errores.** Mensajes de "motor no encontrado" ahora muestran la carpeta exacta donde se busco y la causa mas probable, en vez de un traceback crudo.
+- **P0 #5: F11 no hacia nada.** Se agrego pantalla completa real (F11 alterna, Escape sale). Verificado programaticamente.
+- **P1 #6/#7: ejecutar sin guardar.** El boton ▶ Ejecutar ya no exige guardar antes; corre el contenido actual del editor desde un archivo temporal de sesion (no se borra hasta cerrar el editor, a diferencia de un temporal que se autodestruye antes de que el proceso hijo lo lea).
+- **P1 #8: indicador de cambios.** Titulo muestra `nombre.sipi *` con cambios sin guardar.
+- **P1 #10: atajos de teclado.** `Ctrl+S`, `Ctrl+Shift+S`, `Ctrl+Enter`/`F5`, `F11`, `Ctrl+Y` (redo), `Ctrl+F`/`Ctrl+H` (nuevo: buscar y reemplazar, item #15, con resaltado de coincidencias).
+- **P1 #9: recuperación automática ante un cierre inesperado.** El editor ahora guarda un snapshot de recuperación (debounced, 2s tras la última tecla) en la carpeta HOME del usuario — sobrevive aunque SiPi corra desde una carpeta distinta cada vez. Al reabrir, si quedó un snapshot de una sesión que no cerró limpio, se ofrece recuperarlo con fecha y nombre de archivo. Se borra solo al guardar o al cerrar limpiamente. Verificado simulando un cierre "sucio" real con Xvfb.
+- **La "consola integrada" (item #11 del feedback) ya existía** como el panel de "vista previa en vivo": corre el motor real de SiPi contra el contenido actual del editor y muestra su salida/errores reales mientras se escribe. Se revisó y confirmó que ya cumple ese pedido — no se duplicó.
+- **P2 #37/#38/#39: `sipi cache tamaño`, `sipi cache limpiar` (con confirmacion) y `sipi cache limpiar --todo`.** Recorre la carpeta actual buscando todos los `.sipic` (la cache no vive centralizada, ver `CACHE.md`) y reporta/borra. Probado de punta a punta con archivos reales.
+
+**Pendiente de esta misma lista de feedback** (no entra en una sola sesion, se sigue en las proximas): separacion formal lexer/parser/AST (#23-25), sistema de errores con puntero a columna estilo `14 | mostrar(nombre\n                   ^` (#26), keywords bilingues es/en (#43-48), REPL/debugger/profiler dedicados (#49-53), terminal y explorador de archivos integrados al editor (#12-13), pestañas multi-archivo (#14), gestor de paquetes con `sipi.toml` (#59-64), benchmarks oficiales (#65), runtime alternativo en Rust (futuro, a proposito no se empieza todavia), IA/ML y videojuegos (explicitamente "no todavia" en el propio feedback).
+
+---
+
 ## Novedades v41.0
 
 ### Tipos opcionales (#21)

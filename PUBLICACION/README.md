@@ -37,6 +37,32 @@ llamar saludar("NovaLab")
 
 Correlo con `sipi.bat mi_programa.sipi` (Windows) o `python3 sipi.py mi_programa.sipi` (Linux/Mac). Nada más que instalar Python.
 
+### De cero a tu primer programa corriendo, en 3 pasos
+
+1. Creá un archivo de texto llamado `hola.sipi` con esto adentro:
+   ```sipi
+   programa "Hola Mundo"
+
+   funcion saludar(nombre)
+       decir "Hola " + nombre
+   fin
+
+   llamar saludar("Mundo")
+   ```
+2. Abrí una terminal en esa misma carpeta.
+3. Ejecutalo:
+   ```
+   $ python3 sipi.py hola.sipi
+   Hola Mundo
+   ```
+   (en Windows, `sipi.bat hola.sipi` en vez de `python3 sipi.py hola.sipi`).
+
+Eso es todo — no hay paso de compilación, ni configuración de proyecto, ni nada más que instalar antes (ver la sección de [Instalación](#instalación) más abajo si todavía no tenés SiPi puesto).
+
+**¿Preferís un editor con resaltado de sintaxis y autocompletado en vez de la terminal?** Abrilo con `editor.bat` (Windows) o `python3 editor_sipi.py` (Linux/Mac) — requiere `tkinter` (ver [Instalación](#instalación)).
+
+**¿Querés ver los ejemplos ya hechos en vez de escribir el tuyo?** Corré cualquiera de los de la carpeta `ejemplos/`, por ejemplo: `python3 sipi.py ejemplos/hola_mundo.sipi`. El índice completo está en [`EXAMPLES.md`](EXAMPLES.md).
+
 ---
 
 ## ¿Por qué existe SiPi?
@@ -58,6 +84,10 @@ SiPi saca esa barrera. Las palabras clave (`si`, `mientras`, `funcion`, `repetir
 - Cualquiera que quiera prototipar rápido una interfaz gráfica, un juego 2D simple o una página web sin escribir HTML/CSS a mano.
 
 **SiPi no está pensado** para reemplazar Python/JavaScript en un entorno profesional, ni para software de alto rendimiento (ver [cuándo NO conviene usar SiPi](#cuándo-no-conviene-usar-sipi) más abajo).
+
+### Filosofía: ¿para aprender, o de propósito general?
+
+Las dos cosas, pero en ese orden. La prioridad número uno de SiPi es bajar la barrera de entrada para aprender a programar en español — esa es la razón por la que existe. Al mismo tiempo, no es un lenguaje "de juguete" limitado a ejercicios de clase: tiene POO real, tipos opcionales, manejo de errores, persistencia, y puede armar aplicaciones con interfaz gráfica, juegos y sitios web de verdad, así que alguien puede quedarse en SiPi bastante más tiempo del que tardaría un lenguaje puramente educativo antes de sentir que "ya lo superó". Pero si tuvieras que elegir un solo eje para evaluar si una función nueva encaja en SiPi, es ese primero: ¿ayuda a que alguien sin experiencia previa entienda y programe más rápido?
 
 ---
 
@@ -103,11 +133,50 @@ python3 editor_sipi.py   # requiere tkinter
 
 Requisito: Python 3.10+.
 
+## Tabla de características
+
+| Característica | Estado |
+|---|---|
+| Variables, condicionales, bucles, funciones | ✅ |
+| Recursión real | ✅ |
+| POO real (clases, herencia, interfaces, polimorfismo) | ✅ |
+| Tipos opcionales, pattern matching, manejo de errores | ✅ |
+| GUI de escritorio (`ventana`) | ✅ |
+| Juegos 2D (`crear_juego`) | ✅ |
+| Editor visual (arrastrar y tocar para editar, ver `ventana`/`pagina_web`/`crear_juego`) | ✅ |
+| Páginas web y backend HTTP | ✅ |
+| SQLite / JSON / CSV | ✅ |
+| Gestor de paquetes (vía GitHub, ver `PACKAGES.md`) | ✅ |
+| Editor con resaltado y autocompletado propio | ✅ |
+| Corrector automático de errores tipográficos (`--corregir`) | ✅ |
+| Revisor de código: bugs, seguridad, estilo (`--revisar`) | ✅ |
+| REPL interactivo (`--repl`) | ✅ |
+| CLI con subcomandos (`sipi ejecutar/repl/depurar/analizar/...`) | ✅ |
+| Concurrencia real (`hilo_crear`, `con_bloqueo`) | ✅ (cada hilo con su propia copia de variables, ver `KNOWN_ISSUES.md`) |
+| Extensión de VS Code | ✅ |
+| LSP (resaltado/autocompletado en cualquier editor compatible) | 🧪 (valida bloques y nombres de comando; todavía no valida sintaxis interna de cada comando ni tiene "ir a la definición" — ver `KNOWN_ISSUES.md`) |
+| Depurador con viaje en el tiempo | ✅ |
+| Compilación a ejecutable (`.exe`/binario) | ✅ |
+| CI automatizado (tests en cada cambio) | ✅ |
+| Índice curado de paquetes | ❌ (pendiente, ver Roadmap) |
+| 3D | 🧪 (wireframe básico, no un motor 3D completo) |
+
+| Plataforma | Estado | Notas |
+|---|---|---|
+| Windows 10/11 | ✅ | Instalador (`instalar.bat`), `.bat` para todo, la más probada |
+| Linux | ✅ | Instalador (`instalar.sh`), probado en Ubuntu/Debian y Arch. `tkinter` (para el editor visual) hay que instalarlo aparte con el gestor de paquetes de tu distro |
+| macOS | 🧪 | Corre igual que Linux (`instalar.sh` funciona ahí también), pero con menos testing real que Windows/Linux |
+| Android | 🧪 | Experimental, vía Kivy (`generar_apps`) |
+
+## ¿Por qué la primera versión pública es tan alta (v31+)?
+
+Las versiones anteriores a la v31 corresponden al desarrollo interno y privado del proyecto — la primera versión publicada no representa el inicio histórico del desarrollo, sino el punto en el que se decidió abrirlo. El changelog completo, versión por versión, está en [`CHANGELOG.md`](CHANGELOG.md).
+
 ## ¿Interpretado o compilado? ¿Multiplataforma? ¿Open source?
 
 - **Interpretado.** `sipi.py` lee y ejecuta un archivo `.sipi` directamente. También existe una caché de bytecode propia (`.sipic`) que acelera ejecuciones repetidas del mismo archivo (no confundir con compilación a nativo).
 - **Compilable a ejecutable.** `generar_exe.py` empaqueta un programa `.sipi` en un `.exe`/binario standalone usando PyInstaller — no requiere que quien lo reciba tenga Python instalado.
-- **Multiplataforma en su núcleo** (Windows, Linux, macOS, ya que corre sobre Python), con soporte experimental para Android vía Kivy. El instalador y los `.bat` están más pulidos en Windows por ahora.
+- **Multiplataforma en su núcleo** (Windows, Linux, macOS, ya que corre sobre Python), con soporte experimental para Android vía Kivy. `instalar.bat` (Windows) e `instalar.sh` (Linux/Mac) hacen las mismas comprobaciones reales (Python, pip, dependencias) y no dicen "completado" si algo falló — ver la tabla de plataformas más arriba para el detalle fino de qué está más probado en cada una.
 - **Código abierto** para desarrollo. Existe además un modo "protegido" (`proteger_codigo.py`) para cuando alguien quiere distribuir una app hecha en SiPi sin exponer el intérprete completo — pensado para publicar proyectos de terceros, no para ocultar el lenguaje en sí.
 
 ## Comparación rápida
@@ -141,6 +210,9 @@ Requisito: Python 3.10+.
 | [`FUNCTIONS.md`](FUNCTIONS.md) | Referencia de todos los comandos, como una tabla de funciones |
 | [`EXAMPLES.md`](EXAMPLES.md) | Índice de los ejemplos en `ejemplos/`, organizados por categoría |
 | [`PACKAGES.md`](PACKAGES.md) | Cómo funciona el gestor de paquetes real de SiPi (`instalar_modulo`, `instalar_repositorio`, `buscar_paquete`, `sipi_paquetes.json`) |
+| [`GLOSSARY.md`](GLOSSARY.md) | Terminología internacional: qué nombre tiene en inglés cada concepto de SiPi (`lambda`, `closure`, `callback`, etc.) |
+| [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) | Problemas y limitaciones conocidas, para no reportar algo que ya sabemos |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Cómo reportar bugs, sugerir funciones, y contribuir código |
 | [`AI_GUIDE.md`](AI_GUIDE.md) | Guía para que un asistente de IA (ChatGPT, Claude, etc.) entienda y genere código SiPi correctamente |
 | [`PROMPTS.md`](PROMPTS.md) | Prompts ya armados para pedirle código SiPi a un asistente de IA |
 | [`CHANGELOG.md`](CHANGELOG.md) | Historial completo de versiones |
@@ -150,7 +222,7 @@ Requisito: Python 3.10+.
 **Ya hecho:** editor visual, intérprete, compilador a ejecutable, GUI de escritorio, motor de juegos 2D, POO real, tipos opcionales, pattern matching, LSP, extensión de VS Code, depurador con viaje en el tiempo, caché de bytecode, runtime móvil (Android/Kivy).
 
 **Pendiente:**
-- [ ] Instalador de Linux/Mac tan pulido como el de Windows
+- [ ] Más testing real en macOS (el instalador y el intérprete deberían andar igual que en Linux, pero con menos casos probados)
 - [ ] Catálogo/índice oficial curado de módulos recomendados (hoy el descubrimiento es vía `buscar_paquete` sobre GitHub, sin curaduría)
 - [ ] Módulos oficiales mantenidos por el proyecto
 - [ ] LSP: validación de sintaxis interna por comando, "ir a la definición"
@@ -188,4 +260,4 @@ SiPi/
 └── PROMPTS.md
 ```
 
-— Epsilius (Novalab) Corporation
+— NovaLab Corporation

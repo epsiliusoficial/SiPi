@@ -40,6 +40,13 @@ legible) y todos los `.bat` ya apuntando a los archivos correctos. Esa
 es la carpeta que subis/compartis, nunca la carpeta de desarrollo
 completa.
 
+> **Importante:** `PUBLICACION/` es para distribuir un PROGRAMA HECHO EN
+> SiPi (tu app terminada), no el proyecto SiPi en si. Si estas subiendo
+> el repositorio de SiPi a GitHub para que otros lo vean/contribuyan, el
+> `README.md` tiene que estar en la raiz del repo (donde esta ahora),
+> nunca adentro de una carpeta `PUBLICACION/` -- GitHub solo muestra
+> automaticamente el README que esta en la raiz.
+
 ---
 
 ## 2. Tutorial desde cero

@@ -8,9 +8,17 @@ Uso:
     sipi compilar archivo.sipi      Compila un programa a un ejecutable independiente
     sipi doc archivo.sipi           Genera documentacion HTML desde comentarios //! del codigo
     sipi instalar nombre_o_url      Instala un modulo .sipi (administrador de paquetes)
+    sipi cache tamaño               Muestra cuanto ocupa la cache (.sipic) en esta carpeta
+    sipi cache limpiar               Borra los .sipic encontrados (pide confirmacion, o --todo)
+    sipi benchmarks                  Corre los benchmarks oficiales (loops, funciones, strings, listas, archivos, hilos)
     sipi publicar                   Genera la carpeta PUBLICACION/ lista para distribuir
     sipi tutorial                   Corre el tutorial interactivo para principiantes
-    sipi test                       Corre la bateria de pruebas automatizadas (regresion)
+    sipi test / sipi probar         Corre la bateria de pruebas automatizadas (regresion)
+    sipi repl                       Abre la consola interactiva de SiPi
+    sipi formato archivo.sipi       Reindenta el archivo (4 espacios por nivel)
+    sipi corregir archivo.sipi      Corrige errores tipograficos chicos y guarda el archivo
+    sipi analizar archivo.sipi      Revisa bugs, seguridad y estilo (sin ejecutar el programa)
+    sipi depurar archivo.sipi       Ejecuta mostrando cada linea antes de correrla
     sipi ayuda                      Muestra esta ayuda
     sipi ayuda mostrar comando      Ver que hace un comando puntual, con ejemplo
     sipi ayuda buscar texto         Buscar comandos por palabra clave
@@ -21,8 +29,41 @@ Linux/macOS se usa "python3 sipi_cli.py <subcomando> ...".)
 import os
 import sys
 import subprocess
+import tempfile
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
+
+
+def _advertir_si_carpeta_volatil():
+    """Misma deteccion que editor_sipi.py: si 'sipi_cli.py' se esta
+    corriendo desde adentro de la carpeta temporal del sistema (tipico de
+    abrir el .zip descargado con doble clic sin extraerlo antes), avisa
+    con causa y solucion en vez de dejar que aparezca despues un
+    '[Errno 2] No such file or directory' sin contexto."""
+    try:
+        temporal = os.path.normcase(os.path.abspath(tempfile.gettempdir()))
+        actual = os.path.normcase(AQUI)
+        if actual.startswith(temporal):
+            print("=" * 70)
+            print("[SiPi] Aviso: estas ejecutando SiPi desde una carpeta temporal:")
+            print(f"       {AQUI}")
+            print("       Es probable que hayas abierto el .zip descargado sin")
+            print("       extraerlo primero. Extrae el .zip completo a una carpeta")
+            print("       normal del disco y volve a correr SiPi desde ahi -- si no,")
+            print("       Windows puede borrar estos archivos en cualquier momento,")
+            print("       incluso a mitad de la ejecucion.")
+            print("=" * 70)
+    except OSError:
+        pass
+
+
+def _error_motor_no_encontrado(nombre_normal, nombre_protegido):
+    print(f"[SiPi] No se encontro '{nombre_normal}' ni '{nombre_protegido}' en esta carpeta.")
+    print(f"       Carpeta donde se busco: {AQUI}")
+    print("       Causa mas probable: SiPi se esta ejecutando desde una copia")
+    print("       incompleta (por ejemplo, un .zip sin extraer del todo) o un")
+    print("       archivo fue borrado por un antivirus/limpiador de temporales.")
+    print("       Extrae el proyecto completo a una carpeta normal e intenta de nuevo.")
 
 
 def _ruta_motor():
@@ -32,7 +73,7 @@ def _ruta_motor():
         return normal
     if os.path.exists(protegido):
         return protegido
-    print("[SiPi] Error: no se encontro 'sipi.py' ni 'sipi_protegido.py' en esta carpeta.")
+    _error_motor_no_encontrado("sipi.py", "sipi_protegido.py")
     sys.exit(1)
 
 
@@ -43,7 +84,7 @@ def _ruta_generar_exe():
         return normal
     if os.path.exists(protegido):
         return protegido
-    print("[SiPi] Error: no se encontro 'generar_exe.py' ni 'generar_exe_protegido.py' en esta carpeta.")
+    _error_motor_no_encontrado("generar_exe.py", "generar_exe_protegido.py")
     sys.exit(1)
 
 
@@ -250,15 +291,132 @@ def cmd_test(args):
     sys.exit(resultado.returncode)
 
 
+def cmd_repl(args):
+    resultado = subprocess.run([sys.executable, _ruta_motor(), "--repl"])
+    sys.exit(resultado.returncode)
+
+
+def cmd_formato(args):
+    if not args:
+        print("Uso: sipi formato archivo.sipi")
+        sys.exit(1)
+    resultado = subprocess.run([sys.executable, _ruta_motor(), "--formatear"] + args)
+    sys.exit(resultado.returncode)
+
+
+def cmd_corregir(args):
+    if not args:
+        print("Uso: sipi corregir archivo.sipi")
+        sys.exit(1)
+    resultado = subprocess.run([sys.executable, _ruta_motor(), "--corregir"] + args)
+    sys.exit(resultado.returncode)
+
+
+def cmd_analizar(args):
+    if not args:
+        print("Uso: sipi analizar archivo.sipi")
+        sys.exit(1)
+    resultado = subprocess.run([sys.executable, _ruta_motor(), "--revisar"] + args)
+    sys.exit(resultado.returncode)
+
+
+def cmd_depurar(args):
+    if not args:
+        print("Uso: sipi depurar archivo.sipi")
+        sys.exit(1)
+    resultado = subprocess.run([sys.executable, _ruta_motor(), "--depurar"] + args)
+    sys.exit(resultado.returncode)
+
+
+def _buscar_archivos_cache(carpeta_raiz):
+    """Recorre 'carpeta_raiz' buscando todos los '.sipic' (ver CACHE.md:
+    son archivos chicos, uno por cada '.sipi', al lado del original -- no
+    existe una carpeta central de cache). Se salta '.git', 'node_modules'
+    y carpetas ocultas para no tardar de mas en proyectos grandes."""
+    encontrados = []
+    for actual, carpetas, archivos in os.walk(carpeta_raiz):
+        carpetas[:] = [c for c in carpetas if c not in (".git", "node_modules") and not c.startswith(".")]
+        for nombre in archivos:
+            if nombre.endswith(".sipic"):
+                encontrados.append(os.path.join(actual, nombre))
+    return encontrados
+
+
+def cmd_cache(args):
+    """Items 37/38/39 del feedback: 'sipi cache tamaño', 'sipi cache
+    limpiar' (con confirmacion) y 'sipi cache limpiar --todo' (sin
+    preguntar, para scripts/CI). Busca desde el directorio actual hacia
+    abajo, ya que la cache de SiPi no vive en una carpeta central sino
+    repartida junto a cada '.sipi' (documentado en CACHE.md)."""
+    accion = args[0] if args else None
+    raiz = os.getcwd()
+    if accion == "tamaño" or accion == "tamano":
+        archivos = _buscar_archivos_cache(raiz)
+        total = sum(os.path.getsize(a) for a in archivos)
+        print(f"[SiPi] {len(archivos)} archivo(s) .sipic encontrados bajo {raiz}")
+        print(f"[SiPi] Tamaño total: {total / 1024:.1f} KB")
+        return
+    if accion == "limpiar":
+        archivos = _buscar_archivos_cache(raiz)
+        if not archivos:
+            print("[SiPi] No hay archivos .sipic para limpiar.")
+            return
+        total = sum(os.path.getsize(a) for a in archivos)
+        forzar = "--todo" in args
+        if not forzar:
+            respuesta = input(
+                f"[SiPi] Se van a borrar {len(archivos)} archivo(s) .sipic "
+                f"({total / 1024:.1f} KB). ¿Confirmar? (s/n): "
+            ).strip().lower()
+            if respuesta != "s":
+                print("[SiPi] Cancelado, no se borro nada.")
+                return
+        borrados = 0
+        for archivo in archivos:
+            try:
+                os.remove(archivo)
+                borrados += 1
+            except OSError as error:
+                print(f"[SiPi] No se pudo borrar {archivo}: {error}")
+        print(f"[SiPi] {borrados} archivo(s) .sipic borrados ({total / 1024:.1f} KB liberados).")
+        print("[SiPi] Se regeneraran solos en la proxima ejecucion de cada .sipi -- no rompe nada.")
+        return
+    print("Uso:")
+    print("    sipi cache tamaño            Muestra cuanto ocupa la cache (.sipic) en esta carpeta")
+    print("    sipi cache limpiar           Borra los .sipic encontrados (pide confirmacion)")
+    print("    sipi cache limpiar --todo    Borra los .sipic sin preguntar")
+    sys.exit(1)
+
+
+def cmd_benchmarks(args):
+    """Item #65 del feedback: benchmarks oficiales. Delega en
+    benchmarks.py (motor + generador de programas .sipi reales), pasando
+    los argumentos tal cual para no duplicar el parser de opciones."""
+    ruta_benchmarks = os.path.join(AQUI, "benchmarks.py")
+    if not os.path.exists(ruta_benchmarks):
+        print("[SiPi] No se encontro 'benchmarks.py' en esta carpeta.")
+        sys.exit(1)
+    resultado = subprocess.run([sys.executable, ruta_benchmarks] + args)
+    sys.exit(resultado.returncode)
+
+
 SUBCOMANDOS = {
     "ejecutar": cmd_ejecutar,
     "crear": cmd_crear,
     "compilar": cmd_compilar,
     "doc": cmd_doc,
     "instalar": cmd_instalar,
+    "cache": cmd_cache,
+    "benchmarks": cmd_benchmarks,
     "publicar": cmd_publicar,
     "tutorial": cmd_tutorial,
     "test": cmd_test,
+    "probar": cmd_test,
+    "repl": cmd_repl,
+    "formato": cmd_formato,
+    "corregir": cmd_corregir,
+    "analizar": cmd_analizar,
+    "depurar": cmd_depurar,
     "ayuda": cmd_ayuda,
     "help": cmd_ayuda,
     "-h": cmd_ayuda,
@@ -267,6 +425,7 @@ SUBCOMANDOS = {
 
 
 def main():
+    _advertir_si_carpeta_volatil()
     if len(sys.argv) < 2:
         cmd_ayuda([])
         sys.exit(1)
