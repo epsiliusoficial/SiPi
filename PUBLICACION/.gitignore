@@ -1,0 +1,20 @@
+# Cache de bytecode de SiPi (.sipic): se regenera sola, nunca debe versionarse.
+# Contiene el codigo fuente ya preprocesado (sin comentarios) en JSON legible
+# -- no es informacion secreta por si sola (es lo mismo que el .sipi, menos
+# los comentarios) pero tampoco tiene sentido versionarla: es un artefacto de
+# rendimiento, no codigo fuente real, y queda desactualizada apenas el .sipi
+# cambia (se invalida sola por tamano+hash, ver DOCUMENTACION.md / CACHE.md).
+*.sipic
+
+# Carpetas de build de generar_exe.py / proteger_codigo.py: binarios y
+# archivos intermedios de compilacion, se regeneran en cada compilacion.
+build_*/
+*.spec
+__pycache__/
+*.pyc
+
+# Salida de publicar.py: se regenera desde el codigo fuente real cada vez.
+PUBLICACION/
+
+# Configuracion local del editor (rutas de la maquina de cada persona).
+editor_config.json
