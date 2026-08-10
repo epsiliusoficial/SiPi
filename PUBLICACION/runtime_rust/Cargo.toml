@@ -1,0 +1,7 @@
+[package]
+name = "sipi_runtime_rust"
+version = "0.1.0"
+edition = "2021"
+description = "Prototipo inicial (item #70 del feedback) de un runtime alternativo en Rust para SiPi. Fase 1: solo el evaluador de expresiones, con la MISMA semantica que lexer_sipi.py/ast_sipi.py (Python), para poder cruzar resultados entre ambos y confirmar paridad real antes de avanzar a nada mas grande."
+
+[dependencies]

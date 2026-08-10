@@ -571,5 +571,162 @@ class TestGenerarExeProtegeElProgramaDelUsuario(unittest.TestCase):
             self.assertIn(secreto, resultado.stdout)
 
 
+class TestFeedbackDeLaSesionDe106Items(unittest.TestCase):
+    """Items 99-106 del feedback ("ahora esto es importantisimo porque ya
+    tenes gente externa probandolo"): regresion permanente para los bugs
+    y features concretos que se arreglaron/agregaron durante esta sesion,
+    para que una version futura no los rompa sin que el test suite lo
+    note. Cada test corre el motor real, no simulado."""
+
+    def test_ejecucion_funciona_con_espacios_en_la_carpeta(self):
+        # Item 101: tests de archivos con espacios. Antes de esta sesion
+        # no habia ningun test que corriera el motor desde una carpeta
+        # con espacios en el nombre -- justo el tipo de carpeta donde
+        # aparecio originalmente el bug de Windows reportado por el
+        # tester ("Mis Documentos", "Program Files", etc.).
+        with tempfile.TemporaryDirectory() as tmp:
+            carpeta_con_espacios = os.path.join(tmp, "Carpeta Con Espacios De Verdad")
+            os.makedirs(carpeta_con_espacios)
+            ruta = os.path.join(carpeta_con_espacios, "programa con espacios.sipi")
+            with open(ruta, "w", encoding="utf-8") as f:
+                f.write('programa "Prueba"\ndecir "funciona con espacios"\n')
+            resultado = subprocess.run([sys.executable, MOTOR, ruta],
+                                        capture_output=True, text=True, timeout=10)
+            self.assertEqual(resultado.returncode, 0, resultado.stderr)
+            self.assertIn("funciona con espacios", resultado.stdout)
+
+    def test_directiva_idioma_ingles_completo(self):
+        # Item 43/44: keywords en ingles, de punta a punta con control de
+        # flujo real (no solo un comando suelto).
+        salida, error, codigo = correr(
+            '#idioma en\n'
+            'program "Test"\n'
+            'var x = 10\n'
+            'if x > 5\n'
+            '    say "big"\n'
+            'else\n'
+            '    say "small"\n'
+            'end\n'
+        )
+        self.assertEqual(codigo, 0, error)
+        self.assertIn("big", salida)
+
+    def test_directiva_idioma_ambos_mezcla_espanol_e_ingles(self):
+        # Item 45: "Modo ambos" -- espanol e ingles en el mismo archivo.
+        salida, error, codigo = correr(
+            '#idioma ambos\n'
+            'programa "Test"\n'
+            'variable x = 10\n'
+            'if x > 5\n'
+            '    decir "grande"\n'
+            'sino\n'
+            '    say "chico"\n'
+            'fin\n'
+        )
+        self.assertEqual(codigo, 0, error)
+        self.assertIn("grande", salida)
+
+    def test_directiva_idioma_desconocida_da_error_claro(self):
+        salida, error, codigo = correr('#idioma klingon\nprograma "x"\n')
+        self.assertNotEqual(codigo, 0)
+        self.assertIn("no soportado", salida + error)
+
+    def test_error_incluye_numero_de_linea_y_texto_de_la_linea(self):
+        # Item 26: el error final tiene que traer con que armar el
+        # formato "codigo + puntero", no solo un mensaje de una linea.
+        codigo_sipi = 'programa "Prueba"\nvariable x = 10\nvariable y = 0\ndecir x / y\n'
+        with tempfile.TemporaryDirectory() as tmp:
+            ruta = os.path.join(tmp, "error.sipi")
+            with open(ruta, "w", encoding="utf-8") as f:
+                f.write(codigo_sipi)
+            sys.path.insert(0, RAIZ)
+            import importlib
+            motor_modulo = importlib.import_module(
+                "sipi" if os.path.basename(MOTOR) == "sipi.py" else "sipi_protegido"
+            )
+            interprete = motor_modulo.Interprete(ruta)
+            with self.assertRaises(motor_modulo.SiPiError) as contexto:
+                interprete.ejecutar()
+            error = contexto.exception
+            self.assertEqual(error.num_linea, 4)
+            self.assertIn("x / y", error.texto_linea)
+
+    def test_cache_tamano_y_limpiar_encuentran_y_borran_sipic_reales(self):
+        # Items 37-39: 'sipi cache tamaño' / 'sipi cache limpiar --todo'.
+        sys.path.insert(0, RAIZ)
+        import importlib
+        sipi_cli = importlib.import_module("sipi_cli")
+        with tempfile.TemporaryDirectory() as tmp:
+            sub = os.path.join(tmp, "sub")
+            os.makedirs(sub)
+            with open(os.path.join(tmp, "a.sipic"), "w") as f:
+                f.write("{}")
+            with open(os.path.join(sub, "b.sipic"), "w") as f:
+                f.write("{}")
+            encontrados = sipi_cli._buscar_archivos_cache(tmp)
+            self.assertEqual(len(encontrados), 2)
+            for ruta in encontrados:
+                os.remove(ruta)
+            self.assertEqual(len(sipi_cli._buscar_archivos_cache(tmp)), 0)
+
+    def test_benchmarks_oficiales_corren_todas_las_categorias_sin_fallar(self):
+        # Item 65: los benchmarks oficiales tienen que poder correr de
+        # punta a punta sin que ninguna categoria explote (aunque sea con
+        # pocas repeticiones, para que el test no tarde de mas).
+        ruta_benchmarks = os.path.join(RAIZ, "benchmarks.py")
+        resultado = subprocess.run(
+            [sys.executable, ruta_benchmarks, "--repeticiones", "1"],
+            capture_output=True, text=True, timeout=60,
+        )
+        self.assertEqual(resultado.returncode, 0, resultado.stderr)
+        for categoria in ("Bucles", "Funciones", "Strings", "Listas", "Archivos", "Concurrencia"):
+            self.assertIn(categoria, resultado.stdout)
+
+    def test_vector_sumar_resta_escalar_con_listas_literales_inline(self):
+        # Items #71-73: regresion del bug real que encontre yo mismo al
+        # implementar esto -- listas literales inline como '[1, 2, 3]'
+        # tienen espacios INTERNOS que un split ingenuo por el primer
+        # espacio corta mal ('[1,' + '2, 3] [4, 5, 6]'). Este test corre
+        # exactamente ese caso de punta a punta con el motor real.
+        salida, error, codigo = correr(
+            'programa "Vectores"\n'
+            'vector_sumar [1, 2, 3] [4, 5, 6] -> suma\n'
+            'decir suma\n'
+            'vector_restar [5, 5, 5] [1, 2, 3] -> resta\n'
+            'decir resta\n'
+            'vector_escalar [1, 2, 3] 2 -> doble\n'
+            'decir doble\n'
+        )
+        self.assertEqual(codigo, 0, error)
+        self.assertIn("[5, 7, 9]", salida)
+        self.assertIn("[4, 3, 2]", salida)
+        self.assertIn("[2, 4, 6]", salida)
+
+    def test_vector_producto_punto_magnitud_normalizar(self):
+        salida, error, codigo = correr(
+            'programa "Vectores 2"\n'
+            'vector_producto_punto [1, 2, 3] [4, 5, 6] -> punto\n'
+            'decir punto\n'
+            'vector_magnitud [3, 4] -> mag\n'
+            'decir mag\n'
+            'vector_normalizar [3, 4] -> unitario\n'
+            'decir unitario\n'
+        )
+        self.assertEqual(codigo, 0, error)
+        self.assertIn("32", salida)
+        self.assertIn("5", salida)
+        self.assertIn("[0.6, 0.8]", salida)
+
+    def test_vector_con_longitudes_distintas_da_error_claro(self):
+        salida, error, codigo = correr('programa "Error"\nvector_sumar [1, 2] [1, 2, 3] -> r\n')
+        self.assertNotEqual(codigo, 0)
+        self.assertIn("misma longitud", salida + error)
+
+    def test_vector_normalizar_vector_cero_da_error_claro_no_crashea(self):
+        salida, error, codigo = correr('programa "Error"\nvector_normalizar [0, 0] -> r\n')
+        self.assertNotEqual(codigo, 0)
+        self.assertIn("magnitud es 0", salida + error)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

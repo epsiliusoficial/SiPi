@@ -6,6 +6,94 @@ Todas las versiones, de la mas nueva a la mas vieja. Antes de la v31 el desarrol
 
 ---
 
+## Novedades v41.36 (feedback, sigue lo grande: prototipo de Rust)
+
+Empecé **#70 (runtime alternativo en Rust)** — el "no hacerlo todavía, dejar preparado el diseño" del feedback original ahora tiene un primer paso real, no solo un diseño en papel.
+
+- **`runtime_rust/` (proyecto Cargo nuevo):** tokenizador + parser + evaluador de expresiones en Rust, réplica deliberada de `lexer_sipi.py`/`ast_sipi.py` (misma gramática, mismas precedencias, mismos alias `y`/`o`/`no`). Compila limpio, **17 tests unitarios de Rust (`cargo test`) en verde**.
+- **Validación cruzada de tres vías, no solo dos:** `tests/test_paridad_rust.py` (nuevo) compara el binario de Rust, `ast_sipi.py` (Python) y `Interprete.evaluar_expresion` del motor de producción real — las tres implementaciones dan **exactamente** el mismo resultado para el mismo lote de expresiones, incluyendo el caso de división por cero (mismo mensaje de error, verificado en Rust también).
+- Alcance explícito y honesto en `runtime_rust/README.md`: esto tokeniza y evalúa expresiones, nada más — no ejecuta programas SiPi completos (sin control de flujo, funciones, ni el resto de los ~170 comandos). Es la pieza más chica y más verificable antes de escalar a algo más grande, misma filosofía que la fase 1 del lexer/parser/AST en Python.
+
+Suite completa de Python: **71/71** (46 motor + 23 lexer/AST + 2 paridad Rust). `sipi.py` de producción sigue sin tocarse por esta pieza.
+
+---
+
+## Novedades v41.35 (feedback, sigue lo grande: IA/ML fase 1 — vectores)
+
+Empecé **#71-73 (arrays eficientes, matemáticas, operaciones vectoriales)** — la base explícita que el propio feedback pide antes de pensar en cualquier cosa de IA/ML más elaborada.
+
+- **Nuevos comandos del motor:** `vector_sumar`, `vector_restar`, `vector_escalar`, `vector_producto_punto`, `vector_magnitud`, `vector_normalizar`. Puro Python (listas), sin dependencias nuevas.
+- Mensajes de error específicos: longitud distinta entre vectores, elemento no numérico, normalizar un vector cero — cada uno con su propio mensaje claro, no un `TypeError` crudo de Python.
+- **Encontré y corregí un bug real mío en el camino:** mi primer intento partía `vector_sumar [1, 2, 3] [4, 5, 6] -> r` mal, porque el regex ingenuo corta en el primer espacio que encuentra — incluidos los espacios *internos* de una lista literal (`[1,` + `2, 3] [4, 5, 6]`). Lo agarré yo mismo probando con listas literales inline (no solo con variables, que no tienen ese problema) y lo arreglé con un separador nuevo (`_dividir_dos_argumentos_por_espacio`) que respeta corchetes/paréntesis/comillas al buscar el punto de corte.
+- **4 tests nuevos y permanentes** en `tests/test_suite.py`, incluyendo el caso exacto que reveló el bug (listas literales inline). Suite completa: **46/46**.
+
+---
+
+## Novedades v41.34 (arranca lo grande: lexer/parser/AST real, fase 1)
+
+Autorizado explícitamente a tocar las piezas grandes de la lista (Rust, IA/ML, y lo que quedaba). Empecé por **#23-25 (separación lexer/parser/AST)** porque es la pieza fundacional que hace más fácil todo lo demás (incluido un futuro runtime en Rust, que necesita un AST del que partir en vez de re-parsear texto).
+
+- **`lexer_sipi.py` (nuevo):** tokenizador real y standalone. Números, texto (con escapes), identificadores, operadores (aritméticos, comparación, lógicos, con alias `y`/`o`/`no` → `and`/`or`/`not`), paréntesis. Errores léxicos con columna exacta.
+- **`ast_sipi.py` (nuevo):** nodos de AST (`NumeroLiteral`, `TextoLiteral`, `Variable`, `Binario`, `Unario`, `Llamada`, etc.) + parser recursivo-descendente con precedencia correcta (multiplicación antes que suma, paréntesis, unarios encadenados, cortocircuito real en `and`/`or`) + evaluador.
+- **`tests/test_lexer_parser_ast.py` (nuevo, 23 tests):** cubre lexer, parser, evaluador — y lo más importante, **valida cruzado contra `Interprete.evaluar_expresion` del motor de producción real** para un lote de expresiones, confirmando que el AST nuevo calcula exactamente lo mismo que el intérprete que la gente ya usa.
+
+**Decisión explícita de alcance — importante:** `sipi.py` (el intérprete de producción) **no se tocó ni una línea**. Esta es la base formal, construida y probada aparte, para que el runtime empiece a usarla *gradualmente* en sesiones futuras (primero probablemente para el puntero de columna exacto del item #26, que hoy apunta al final de línea; después para ir reemplazando el evaluador basado en `eval()`) — no un swap completo de una sola vez sobre un intérprete de 9000+ líneas que ya funciona y tiene gente usándolo. Encontré y corregí en el camino dos bugs propios de mis primeros tests (mock de `Interprete` incompleto, afirmación incorrecta sobre paridad con producción que verifiqué y corregí antes de dejarla escrita) — la propia suite de tests los agarró antes de entregar.
+
+Se re-corrió la regresión completa del motor (42/42, sin cambios) para confirmar que `sipi.py` sigue exactamente igual.
+
+**Próximos pasos ya identificados para IA/ML (#71-76) y Rust (#70):** vectores/operaciones matemáticas como builtins nuevos del motor (bajo riesgo, acotado, similar a lo hecho con `benchmarks.py`), y un prototipo mínimo de Rust que tokenice un subconjunto de SiPi (usando `lexer_sipi.py` como referencia de comportamiento) — ninguno de los dos se apuró en esta tanda para no meter cambios de motor sin el mismo nivel de testeo real que tuvo todo lo anterior.
+
+---
+
+## Novedades v41.33 (feedback, decima tanda: regresion permanente items 99-106)
+
+- **P4 #99-106 (testing): la lista pedía explícitamente tests de Windows, archivos con espacios, rutas temporales, ZIP, código sin guardar, F11, compilación y regresión.** En vez de dejar todo lo arreglado en esta sesión (8 tandas: bugs P0, ejecutar sin guardar, recuperación, pestañas, explorador, terminal, ir a línea/brackets, bilingüe, benchmarks) solo verificado "a mano" una vez, agregué una clase nueva `TestFeedbackDeLaSesionDe106Items` a `tests/test_suite.py` con 7 tests reales y permanentes:
+  - Ejecución real con espacios en la carpeta (el tipo exacto de carpeta donde apareció originalmente el bug de Windows del tester).
+  - Directiva `#idioma en` de punta a punta con control de flujo real (`if`/`else`).
+  - Directiva `#idioma ambos` mezclando español e inglés en el mismo archivo.
+  - Directiva de idioma inválida sigue dando error claro.
+  - `SiPiError` trae `num_linea`/`texto_linea` poblados (lo que hace posible el formato con puntero del item #26).
+  - `sipi cache` encuentra y borra `.sipic` reales.
+  - Los benchmarks oficiales corren las 6 categorías sin fallar.
+  Suite completa: **42/42** (35 originales + 7 nuevos), todos corridos de verdad, no simulados.
+
+Con esto, todo lo agregado en esta sesión de feedback queda protegido contra regresiones futuras, no solo confirmado una vez en la terminal.
+
+---
+
+## Novedades v41.32 (feedback, novena tanda: ir a línea + bracket matching)
+
+Antes de escribir código, revisé cuáles del resto de items 11-22 (sección 🟢 editor) ya estaban hechos, como pasó con el bilingüe. Resultado: coloreado de sintaxis (#17), número de línea (#18) y autocompletado (#16) **ya existían**. Los gaps reales eran #19 y #22:
+
+- **P3 #19: ir a línea (`Ctrl+G`).** Diálogo simple que pide un número y mueve el cursor ahí, seleccionando la línea para que sea fácil de ubicar visualmente. Verificado programáticamente: abre el diálogo, escribe un número, Enter mueve el cursor a esa línea exacta y cierra el diálogo.
+- **P3 #22: bracket matching.** Resalta el paréntesis/corchete/llave bajo o pegado al cursor junto con su pareja, contando niveles de anidamiento correctamente (un `(` interno no hace match con el primer `)` que aparece después, sigue contando hasta el nivel correcto). Verificado con un caso de anidamiento real (`((1 + 2) * 3)`) confirmando que empareja con el cierre externo correcto, no con el más cercano.
+- **P3 #20/#21 (selección múltiple, plegado de código):** no implementados en esta tanda — ambos requieren reescribir bastante de cómo el widget `Text` de Tk maneja cursores/selección (selección múltiple no es nativa de Tk) o una estructura de plegado por rangos de línea con su propia UI, más riesgo de romper el editor de coloreado/autocompletado existente que las otras piezas de esta sesión. Quedan pendientes si se necesitan.
+
+Se re-corrieron las cinco suites de tests del editor (indicador de cambios, recuperación, pestañas, explorador, terminal) y la regresión completa del motor (35/35): todo intacto.
+
+---
+
+## Novedades v41.31 (feedback, octava tanda: terminal integrada)
+
+- **P3 #12: terminal integrada.** Panel plegable (botón "⌨ Terminal" o `` Ctrl+` ``) igual en espíritu al de cualquier editor de código: comandos que el usuario elige y escribe a mano, con sus propios permisos, en la carpeta del proyecto — no es más riesgo que abrir una terminal aparte (que el usuario ya puede hacer en cualquier momento), solo evita salir del editor. Diseño explícitamente simple a propósito: cada línea corre como un comando independiente vía `subprocess.run` en un hilo (no congela la interfaz), no una sesión de shell persistente ni un pseudo-terminal — así evité la complejidad/riesgo extra de manejar un PTY real. `cd` se maneja aparte para que persista entre comandos (si no, cada comando arrancaría de nuevo en la carpeta vieja al correr en un proceso nuevo cada vez); `clear`/`cls` vacía el panel localmente. Verificado con una suite de tests dedicada bajo Xvfb: comando real ejecutado con salida real capturada, `cd` persistente confirmado con `pwd`, `cd` a carpeta inexistente sin crashear, `clear`, mostrar/ocultar. Encontré y corregí un bug propio en el camino (un `def` duplicado por accidente al editar) y una carrera de hilos en segundo plano terminando después del cierre de ventana (ahora con manejo explícito) — ambos atrapados por la suite de tests antes de entregar. Se re-corrieron las cuatro suites de tandas anteriores del editor y la regresión completa del motor (35/35): todo intacto.
+
+---
+
+## Novedades v41.30 (feedback, septima tanda: bilingüe + hallazgo importante)
+
+- **P3 #43-46: keywords en español/inglés (y más).** Al revisar el motor para implementar esto, encontré que **ya estaba hecho** — y no solo español/inglés: `IDIOMAS_SIPI` ya soporta `en`, `fr`, `zh`, `hi`, `ar`, `bn` via la directiva `#idioma <codigo>` al principio del archivo, traduciendo la palabra clave de cada línea a su equivalente en español (el idioma interno real, cumpliendo el item #46 al pie de la letra: "una misma semántica interna, no crear dos lenguajes") de forma segura respecto de cadenas de texto (`_dividir_respetando_cadenas`). Lo confirmé con un programa real en inglés (`#idioma en`, `if`/`say`/`var`) ejecutado de punta a punta.
+- **P3 #45: "Modo ambos".** Esto sí faltaba como concepto explícito, aunque ya funcionaba de hecho: como las palabras clave en español nunca están en ninguna tabla de traducción, simplemente pasan sin tocar — así que activar la tabla de inglés ya permitía mezclar `si`/`if`, `decir`/`say`, etc. libremente en el mismo archivo. Agregué `#idioma ambos` (y `mixto`/`both`) como alias explícito de esa misma tabla, para que la directiva diga lo que el usuario quiere decir en vez de que tenga que saber este detalle interno. Verificado con un programa real mezclando ambos idiomas en el mismo archivo, más la directiva de idioma inválido (sigue fallando con el mismo mensaje claro de siempre) y la regresión completa del motor (35/35).
+- **P3 #47 (parcial):** la directiva `#idioma` ya es "configuración por proyecto" en el sentido de que vive en el propio archivo `.sipi`; no existe todavía un `idioma = "..."` centralizado en `sipi.toml` que aplique a todos los archivos de un proyecto de una — queda pendiente si se necesita.
+- **P3 #48:** soporte en la extensión de VS Code para elegir idioma desde una configuración — no implementado, el propio feedback lo marca como "futuro".
+
+---
+
+## Novedades v41.29 (feedback, sexta tanda: explorador de archivos)
+
+- **P3 #13: explorador de archivos.** Panel nuevo a la izquierda del editor (arbol tipo VS Code) que muestra la carpeta del proyecto, con carga perezosa: una subcarpeta no se lee hasta que el usuario la despliega, asi que proyectos grandes no tardan en mostrarse. Doble clic en un `.sipi` lo abre directamente en una pestaña (reutilizando la misma logica de "ya esta abierto -> cambia de pestaña" del item #14). Boton 📁 para elegir la carpeta del proyecto, ⟳ para refrescar. Filtra ruido tipico (`__pycache__`, `.git`, `node_modules`, ocultos) con el mismo criterio que ya usaba `sipi cache` para no confundir cache con codigo real. Verificado con una suite de tests dedicada bajo Xvfb contra una carpeta de prueba real con subcarpetas: carga perezosa (placeholder antes de desplegar, hijos reales despues), doble clic abre el archivo correcto, no duplica pestañas, no crashea al doble-clickear una carpeta. Se re-corrieron ademas las tres suites de tandas anteriores (indicador de cambios, recuperacion, pestañas) y la regresion completa del motor (35/35): todo intacto.
+
+---
+
 ## Novedades v41.28 (feedback, quinta tanda: pestañas multi-archivo)
 
 - **P3 #14: pestañas.** El editor ahora soporta varios `.sipi` abiertos a la vez, cada uno con su propio contenido, archivo y estado de "modificado" aislado (un solo widget de texto compartido internamente; el contenido de la pestaña inactiva se guarda en memoria al cambiar, no se pierde). Barra de pestañas arriba del editor, con `+` para nueva pestaña y `✕` para cerrar cada una.
