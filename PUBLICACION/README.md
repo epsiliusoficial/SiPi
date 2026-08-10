@@ -260,4 +260,4 @@ SiPi/
 └── PROMPTS.md
 ```
 
-— NovaLab Corporation
+— Epsilius (Novalab Corporation)
