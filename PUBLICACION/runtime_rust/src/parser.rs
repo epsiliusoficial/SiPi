@@ -214,6 +214,14 @@ pub fn parsear(texto: &str) -> Result<Nodo, ErrorSintactico> {
     parser.parsear_expresion()
 }
 
+/// Alias publico de `parsear`, usado por sentencias.rs. Mismo nombre que
+/// se le hubiera dado si esta funcion hubiera nacido pensada para
+/// sentencias desde el principio -- se mantiene `parsear` tambien por
+/// compatibilidad con el modo demo de main.rs.
+pub fn parsear_expresion_str(texto: &str) -> Result<Nodo, ErrorSintactico> {
+    parsear(texto)
+}
+
 fn es_verdadero(valor: &Valor) -> bool {
     match valor {
         Valor::Booleano(b) => *b,
