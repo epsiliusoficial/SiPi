@@ -1,0 +1,14 @@
+programa "Sistema de puntajes con base de datos real"
+
+funcion registrar_puntaje(jugador, puntos)
+    guardar_dato "puntaje_de_{jugador}" puntos
+    decir "Puntaje guardado para {jugador}: {puntos}"
+fin
+
+llamar registrar_puntaje("Mateo", 1500)
+llamar registrar_puntaje("Ana", 980)
+
+obtener_dato "puntaje_de_Mateo" -> puntaje_mateo
+decir "El puntaje guardado de Mateo es: {puntaje_mateo}"
+
+decir "Los datos quedan guardados de verdad en sipi_datos.json"

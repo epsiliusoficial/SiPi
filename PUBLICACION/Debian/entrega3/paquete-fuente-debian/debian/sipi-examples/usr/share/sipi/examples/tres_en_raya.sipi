@@ -1,0 +1,48 @@
+programa "Tres en raya con matrices reales"
+
+funcion imprimir_tablero()
+    variable fila = 0
+    mientras fila < 3
+        variable columna = 0
+        variable fila_texto = ""
+        mientras columna < 3
+            matriz_obtener tablero fila columna -> celda
+            variable fila_texto = fila_texto + celda + " "
+            sumar columna 1
+        fin
+        decir "{fila_texto}"
+        sumar fila 1
+    fin
+fin
+
+funcion hay_ganador_en_fila(numero_fila)
+    matriz_obtener tablero numero_fila 0 -> a
+    matriz_obtener tablero numero_fila 1 -> b
+    matriz_obtener tablero numero_fila 2 -> c
+    si a == b y b == c y a != "-"
+        devolver verdadero
+    fin
+    devolver falso
+fin
+
+matriz_crear tablero 3 3 "-"
+
+decir "Tablero inicial:"
+llamar imprimir_tablero()
+
+matriz_asignar tablero 0 0 "X"
+matriz_asignar tablero 0 1 "X"
+matriz_asignar tablero 0 2 "X"
+matriz_asignar tablero 1 0 "O"
+matriz_asignar tablero 1 1 "O"
+matriz_asignar tablero 2 2 "X"
+
+decir ""
+decir "Tablero jugado:"
+llamar imprimir_tablero()
+
+llamar_valor hay_ganador_en_fila(0) -> gano_fila_0
+si gano_fila_0 == verdadero
+    decir ""
+    decir "Hay un ganador en la fila 0!"
+fin

@@ -1,0 +1,33 @@
+#!/bin/sh
+set -eu
+echo "== sipi-editor: comando disponible globalmente =="
+command -v sipi-editor
+
+echo "== sipi-editor: python3-tk realmente presente =="
+python3 -c "import tkinter"
+
+echo "== sipi-editor: arranca sin traceback bajo Xvfb (display virtual) =="
+xvfb-run -a --server-args="-screen 0 1024x768x24" \
+    timeout 5 sipi-editor > /tmp/salida_editor 2>&1 || true
+if grep -qi "Traceback" /tmp/salida_editor; then
+    echo "FALLO: el editor tiro un traceback al arrancar" >&2
+    cat /tmp/salida_editor >&2
+    exit 1
+fi
+
+echo "== sipi-editor: config de usuario NO se escribe en /usr/share (bug encontrado al empaquetar) =="
+HOME_TMP="$(mktemp -d)"
+trap 'rm -rf "$HOME_TMP"' EXIT
+env HOME="$HOME_TMP" XDG_CONFIG_HOME="$HOME_TMP/.config" \
+    xvfb-run -a --server-args="-screen 0 1024x768x24" \
+    timeout 5 sipi-editor > /dev/null 2>&1 || true
+if [ -f /usr/share/sipi/editor_config.json ]; then
+    echo "FALLO: el editor escribio su config en /usr/share/sipi (no escribible por un usuario normal)" >&2
+    exit 1
+fi
+test -f "$HOME_TMP/.config/sipi/editor_config.json"
+
+echo "== man sipi-editor =="
+man -w sipi-editor > /dev/null
+
+echo "OK: todos los checks de sipi-editor pasaron"

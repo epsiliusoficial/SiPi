@@ -1,0 +1,29 @@
+programa "Ficha de un producto con manejo de errores real"
+
+diccionario_crear producto
+diccionario_asignar producto "nombre" "Teclado mecanico"
+diccionario_asignar producto "precio" 45000
+diccionario_asignar producto "stock" 12
+
+diccionario_obtener producto "nombre" -> nombre_producto
+diccionario_obtener producto "precio" -> precio_producto
+decir "Producto: {nombre_producto} - Precio: ${precio_producto}"
+
+diccionario_tiene producto "descuento" -> tiene_descuento
+si tiene_descuento == falso
+    decir "Este producto no tiene descuento cargado."
+fin
+
+intentar
+    leer_archivo "config_que_no_existe.txt" -> config
+    decir "Configuracion cargada: {config}"
+capturar
+    decir "No se encontro un archivo de configuracion, se usan valores por defecto."
+    diccionario_asignar producto "descuento" 0
+fin
+
+diccionario_claves producto -> todas_las_claves
+decir "Datos guardados del producto: {todas_las_claves}"
+
+registrar_evento "Se consulto el producto {nombre_producto}" "historial.log"
+decir "Consulta registrada en historial.log"

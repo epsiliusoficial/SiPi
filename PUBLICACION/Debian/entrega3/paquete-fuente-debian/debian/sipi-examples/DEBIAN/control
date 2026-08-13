@@ -1,0 +1,18 @@
+Package: sipi-examples
+Source: sipi
+Version: 41.24.0-4
+Architecture: all
+Maintainer: Mateo (NovaLab Corporation) <mateo@novalab.example>
+Installed-Size: 116
+Depends: sipi (= 41.24.0-4)
+Section: interpreters
+Priority: optional
+Description: programas de ejemplo para el lenguaje SiPi
+ Coleccion de programas .sipi de ejemplo: desde "hola mundo" hasta una
+ calculadora con interfaz grafica, un juego con fisica y IA de
+ enemigos, formularios web, manejo de archivos JSON/CSV, estructuras
+ recursivas y mas -- listos para ejecutar con `sipi ARCHIVO.sipi` y
+ pensados como material de aprendizaje.
+ .
+ Este paquete es parte de SiPi; ver el paquete `sipi` para el motor
+ del interprete.

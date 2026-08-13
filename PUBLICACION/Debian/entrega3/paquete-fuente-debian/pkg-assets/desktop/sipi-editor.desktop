@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=SiPi Editor
+Name[es]=Editor de SiPi
+GenericName=SiPi Code Editor
+GenericName[es]=Editor de codigo SiPi
+Comment=Editor visual para el lenguaje de programacion SiPi
+Comment[es]=Editor visual para el lenguaje de programacion SiPi
+Exec=sipi-editor %f
+TryExec=sipi-editor
+Icon=sipi
+Terminal=false
+Categories=Development;IDE;
+MimeType=text/x-sipi;
+Keywords=SiPi;programacion;editor;lenguaje;espanol;
+StartupNotify=true

@@ -1,0 +1,68 @@
+Source: sipi
+Section: interpreters
+Priority: optional
+Maintainer: Mateo (NovaLab Corporation) <mateo@novalab.example>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: sipi
+Architecture: all
+Depends: ${misc:Depends}, python3 (>= 3.10~)
+Recommends: sipi-editor, sipi-examples
+Suggests: sipi-cli
+Description: interprete del lenguaje de programacion SiPi (en espanol)
+ SiPi es un lenguaje de programacion con sintaxis completamente en
+ espanol, pensado para que cualquiera pueda escribir programas reales:
+ interfaces graficas, juegos, paginas web y bases de datos, sin
+ pelearse primero con sintaxis en ingles ni configuracion.
+ .
+ Este paquete instala el motor del interprete (comando `sipi`), su
+ pagina de manual, completions de shell, el registro MIME para
+ archivos .sipi y el icono del lenguaje. Es pura logica de Python
+ estandar: no requiere pip en tiempo de instalacion ni de ejecucion.
+ .
+ El editor visual (GUI) y la CLI de gestion de proyectos son paquetes
+ separados: sipi-editor y sipi-cli.
+
+Package: sipi-cli
+Architecture: all
+Depends: ${misc:Depends}, sipi (= ${source:Version}), python3 (>= 3.10~)
+Description: interfaz de linea de comandos profesional para proyectos SiPi
+ Herramienta de linea de comandos para gestionar proyectos SiPi: crear
+ proyectos nuevos, correr la bateria de tests de regresion y otras
+ tareas de mantenimiento, por afuera de la ejecucion de un solo
+ archivo (para eso esta el comando `sipi`).
+ .
+ Este paquete es parte de SiPi; ver el paquete `sipi` para el motor
+ del interprete.
+
+Package: sipi-editor
+Architecture: all
+Depends: ${misc:Depends}, sipi (= ${source:Version}), python3 (>= 3.10~), python3-tk (>= 3.10~)
+Description: editor visual (WYSIWYG) para el lenguaje SiPi
+ Editor visual de SiPi: resaltado de sintaxis en vivo, panel de vista
+ previa que corre el programa en segundo plano, terminal integrado,
+ explorador de archivos, y botones para ejecutar el programa completo
+ (incluidas ventanas y juegos reales) o compilarlo a un ejecutable
+ independiente.
+ .
+ Incluye entrada de menu de escritorio (.desktop), icono, e
+ integracion con el gestor de archivos para abrir archivos .sipi con
+ un doble clic.
+ .
+ Este paquete es parte de SiPi; ver el paquete `sipi` para el motor
+ del interprete (unica dependencia real, ademas de python3-tk).
+
+Package: sipi-examples
+Architecture: all
+Depends: ${misc:Depends}, sipi (= ${source:Version})
+Description: programas de ejemplo para el lenguaje SiPi
+ Coleccion de programas .sipi de ejemplo: desde "hola mundo" hasta una
+ calculadora con interfaz grafica, un juego con fisica y IA de
+ enemigos, formularios web, manejo de archivos JSON/CSV, estructuras
+ recursivas y mas -- listos para ejecutar con `sipi ARCHIVO.sipi` y
+ pensados como material de aprendizaje.
+ .
+ Este paquete es parte de SiPi; ver el paquete `sipi` para el motor
+ del interprete.

@@ -1,0 +1,27 @@
+programa "Procesar varios archivos usando variables (no solo literales)"
+
+funcion procesar_archivo(nombre_archivo)
+    intentar
+        leer_archivo nombre_archivo -> contenido
+        devolver contenido
+    capturar
+        devolver "(archivo no encontrado)"
+    fin
+fin
+
+crear_carpeta "documentos"
+crear_archivo "documentos/notas.txt" "Reunion a las 10am"
+crear_archivo "documentos/tareas.txt" "Terminar el reporte"
+
+lista_crear archivos_a_leer
+lista_agregar archivos_a_leer "documentos/notas.txt"
+lista_agregar archivos_a_leer "documentos/tareas.txt"
+lista_agregar archivos_a_leer "documentos/no_existe.txt"
+
+para_cada archivo en archivos_a_leer
+    llamar_valor procesar_archivo(archivo) -> contenido_leido
+    decir "{archivo} -> {contenido_leido}"
+fin
+
+decir ""
+decir "Los comandos de archivo ahora aceptan variables, no solo texto literal."

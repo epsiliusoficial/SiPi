@@ -1,0 +1,38 @@
+programa "Funciones recursivas reales: factorial y fibonacci"
+
+funcion factorial(n)
+    si n <= 1
+        devolver 1
+    fin
+    variable n_menos_uno = n - 1
+    llamar_valor factorial(n_menos_uno) -> resto
+    devolver n * resto
+fin
+
+funcion fibonacci(n)
+    si n <= 1
+        devolver n
+    fin
+    variable a = n - 1
+    variable b = n - 2
+    llamar_valor fibonacci(a) -> fib_a
+    llamar_valor fibonacci(b) -> fib_b
+    devolver fib_a + fib_b
+fin
+
+decir "Factorial de 1 a 10:"
+variable i = 1
+mientras i <= 10
+    llamar_valor factorial(i) -> resultado
+    decir "  {i}! = {resultado}"
+    sumar i 1
+fin
+
+decir ""
+decir "Los primeros 10 numeros de Fibonacci:"
+variable j = 0
+mientras j <= 9
+    llamar_valor fibonacci(j) -> fib_j
+    decir "  fibonacci({j}) = {fib_j}"
+    sumar j 1
+fin

@@ -1,0 +1,27 @@
+programa "Temporizadores reales - cuenta regresiva"
+
+decir "Cuenta regresiva de 5 segundos (usando 'cada'):"
+
+variable segundos_restantes = 5
+
+cada 1 segundos 5 veces
+    decir "{segundos_restantes}..."
+    restar segundos_restantes 1
+fin
+
+decir "Despegue!"
+
+decir ""
+decir "Ahora un temporizador que se detiene solo cuando se cumple una condicion:"
+
+variable intentos = 0
+cada 0.3 segundos
+    sumar intentos 1
+    decir "Verificando... intento numero {intentos}"
+    si intentos >= 4
+        decir "Condicion cumplida, deteniendo el temporizador."
+        detener_temporizador
+    fin
+fin
+
+decir "Temporizadores completados con exito."

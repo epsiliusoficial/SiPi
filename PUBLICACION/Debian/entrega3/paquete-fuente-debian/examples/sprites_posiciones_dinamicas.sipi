@@ -1,0 +1,25 @@
+programa "Juego con enemigos en posiciones aleatorias reales"
+
+azar_entre 50 550 -> x_enemigo1
+azar_entre 50 400 -> y_enemigo1
+azar_entre 50 550 -> x_enemigo2
+azar_entre 50 400 -> y_enemigo2
+
+variable tamano_jugador = 35
+
+funcion perder()
+    decir "Chocaste con un enemigo. Puntaje final: {puntaje}"
+fin
+
+crear_juego "SiPi - Enemigos aleatorios" 640 480
+    sprite jugador 300 220 tamano_jugador tamano_jugador "cian"
+    sprite enemigo1 x_enemigo1 y_enemigo1 30 30 "rojo"
+    sprite enemigo2 x_enemigo2 y_enemigo2 30 30 "morado"
+
+    velocidad 5
+    puntaje_inicial 0
+    mostrar_puntaje
+
+    chocar jugador enemigo1 perder()
+    chocar jugador enemigo2 perder()
+fin

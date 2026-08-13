@@ -1,0 +1,9 @@
+programa "Automatizacion real"
+
+crear_carpeta "salida"
+variable fecha_texto = "reporte generado por SiPi"
+crear_archivo "salida/reporte.txt" "Este archivo es real. {fecha_texto}."
+leer_archivo "salida/reporte.txt" -> contenido
+decir "Contenido leido del archivo: {contenido}"
+copiar_archivo "salida/reporte.txt" "salida/reporte_copia.txt"
+decir "Automatizacion completada."

@@ -1,0 +1,7 @@
+3f047e139da2207f0302724b5a3cab5f  usr/bin/sipi-cli
+514ededd03d39445ffec5128d685bfa9  usr/share/doc/sipi-cli/changelog.Debian.gz
+f2571bdc1deb799d40bcfe904ee074bd  usr/share/doc/sipi-cli/changelog.gz
+08dc14c7224cf91ab0fbc078cd9177ba  usr/share/doc/sipi-cli/copyright
+4be23a9b0b98f396b6690d795a0505fc  usr/share/lintian/overrides/sipi-cli
+45587e2691178f3cce21618d6ecbf902  usr/share/man/man1/sipi-cli.1.gz
+91e58317bc7e83f7e4a6b49023a6d27a  usr/share/sipi/sipi_cli.py

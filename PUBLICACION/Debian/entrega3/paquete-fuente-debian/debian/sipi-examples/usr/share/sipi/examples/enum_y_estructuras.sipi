@@ -1,0 +1,45 @@
+programa "Sistema de personajes con enum y estructuras"
+
+enum Clases
+    GUERRERO
+    MAGO
+    ARQUERO
+fin
+
+estructura Personaje
+    nombre = "Sin nombre"
+    vida = 100
+    clase = 0
+    nivel = 1
+fin
+
+funcion crear_guerrero(nombre)
+    instanciar Personaje -> nuevo
+    diccionario_asignar nuevo "nombre" nombre
+    diccionario_asignar nuevo "clase" Clases_GUERRERO
+    diccionario_asignar nuevo "vida" 150
+    devolver nuevo
+fin
+
+funcion crear_mago(nombre)
+    instanciar Personaje -> nuevo
+    diccionario_asignar nuevo "nombre" nombre
+    diccionario_asignar nuevo "clase" Clases_MAGO
+    diccionario_asignar nuevo "vida" 80
+    devolver nuevo
+fin
+
+llamar_valor crear_guerrero("Conan") -> guerrero1
+llamar_valor crear_mago("Merlin") -> mago1
+
+diccionario_obtener guerrero1 "nombre" -> nombre_guerrero
+diccionario_obtener guerrero1 "vida" -> vida_guerrero
+diccionario_obtener guerrero1 "clase" -> clase_guerrero
+decir "{nombre_guerrero}: {vida_guerrero} de vida, clase numero {clase_guerrero}"
+
+diccionario_obtener mago1 "nombre" -> nombre_mago
+diccionario_obtener mago1 "vida" -> vida_mago
+decir "{nombre_mago}: {vida_mago} de vida"
+
+decir ""
+decir "Cada personaje tiene su propia copia independiente de la estructura."

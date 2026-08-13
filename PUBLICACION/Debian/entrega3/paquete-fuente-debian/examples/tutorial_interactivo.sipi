@@ -1,0 +1,73 @@
+programa "Tutorial interactivo de SiPi"
+
+modo_principiante
+
+decir "==================================================="
+decir " Bienvenido al tutorial interactivo de SiPi"
+decir "==================================================="
+decir ""
+decir "Este tutorial te muestra, paso a paso y con ejemplos"
+decir "que se ejecutan de verdad, las bases del lenguaje."
+decir ""
+
+decir "--- Paso 1: Variables ---"
+variable nombre = "Mateo"
+variable edad = 20
+decir "Creamos una variable asi: variable nombre = 'Mateo'"
+decir "Resultado: {nombre} tiene {edad} años"
+decir ""
+
+decir "--- Paso 2: Operaciones ---"
+variable resultado = edad + 5
+decir "variable resultado = edad + 5  ->  {resultado}"
+decir ""
+
+decir "--- Paso 3: Condicionales ---"
+si edad >= 18
+    decir "Como edad >= 18, esto se imprime (rama 'si')"
+sino
+    decir "Esto no se imprime porque la condicion es falsa"
+fin
+decir ""
+
+decir "--- Paso 4: Bucles ---"
+variable contador = 0
+repetir 3 veces
+    sumar contador 1
+    decir "Vuelta numero {contador}"
+fin
+decir ""
+
+decir "--- Paso 5: Funciones ---"
+funcion doble(x)
+    devolver x * 2
+fin
+variable doce = doble(6)
+decir "funcion doble(x): devuelve x * 2. doble(6) = {doce}"
+decir ""
+
+decir "--- Paso 6: Listas ---"
+lista_crear numeros
+lista_agregar numeros 1
+lista_agregar numeros 2
+lista_agregar numeros 3
+decir "Lista creada y llenada: {numeros}"
+decir ""
+
+decir "--- Paso 7: Manejo de errores ---"
+intentar
+    lanzar_error "Esto es un error de ejemplo"
+capturar
+    decir "Capturamos el error: {error}"
+fin
+decir ""
+
+decir "==================================================="
+decir " Fin del tutorial. Algunos comandos utiles:"
+decir "==================================================="
+decir " - ayuda 'comando' dentro de un programa .sipi"
+decir " - 'sipi ayuda mostrar comando' desde la terminal"
+decir " - 'sipi ayuda buscar palabra' para buscar comandos"
+decir " - DOCUMENTACION.md tiene la referencia completa"
+decir ""
+decir "Segui explorando los ejemplos en la carpeta ejemplos/"

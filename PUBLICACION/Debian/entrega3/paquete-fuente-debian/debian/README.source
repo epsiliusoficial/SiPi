@@ -1,0 +1,37 @@
+Reproducibilidad del build
+===========================
+
+Este paquete es reproducible: dos builds de `dpkg-buildpackage -us -uc -b`
+sobre el MISMO arbol fuente (mismo checkout, sin volver a copiarlo)
+producen los 4 .deb con hash SHA-256 identico, byte a byte. Verificado
+corriendo el build dos veces seguidas y comparando `sha256sum`.
+
+Esto funciona sin configuracion adicional porque:
+  - debian/changelog fija la fecha, y dpkg-buildpackage deriva
+    SOURCE_DATE_EPOCH de ahi automaticamente si no esta ya seteado en
+    el entorno -- por eso todos los timestamps dentro del .deb
+    (control.tar, data.tar, y el propio archivo ar) quedan clampeados
+    a esa fecha en vez de "ahora".
+  - debhelper compat 13 ya usa dpkg-deb --root-owner-group y
+    compresion determinista por defecto.
+
+UNA SOLA ADVERTENCIA REAL, encontrada probando esto en este mismo
+empaquetado: si el arbol fuente se COPIA con una herramienta que no
+preserva el orden de lectura del filesystem (por ejemplo `cp -r` a
+otro filesystem/directorio distinto, como se hizo en una prueba para
+verificar esto), el orden en el que dpkg-deb agrega los archivos al
+data.tar interno puede cambiar -- el CONTENIDO de cada archivo queda
+identico (se verifico extrayendo y comparando con `diff -rq`), pero el
+.deb final no es bit-a-bit identico por ese reordenamiento de tar.
+
+Para que un tercero (por ejemplo Vinari OS) obtenga SIEMPRE el mismo
+.deb a partir de las mismas fuentes, hay que construir desde una
+fuente con orden de archivos FIJO, no desde una copia manual de
+carpeta:
+  - Reconstruir dentro del mismo checkout de git (no copiar la carpeta
+    a mano), o
+  - Generar el paquete fuente con `dpkg-buildpackage -S` (produce un
+    .dsc + .tar.xz canonico) y construir SIEMPRE a partir de extraer
+    ESE .tar.xz -- un tar ya generado se extrae siempre en el mismo
+    orden, a diferencia de un `cp -r` entre sistemas de archivos
+    distintos.

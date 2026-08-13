@@ -1,0 +1,25 @@
+programa "Sonidos generados sin archivos externos"
+
+decir "SiPi puede generar sonidos reales sin necesitar archivos .wav."
+decir "Reproduciendo una escala simple..."
+
+reproducir_tono 261 0.3
+reproducir_tono 294 0.3
+reproducir_tono 329 0.3
+reproducir_tono 349 0.3
+reproducir_tono 392 0.3
+
+decir "Escala reproducida. Ahora un juego con efectos de sonido generados:"
+
+funcion ganar_punto()
+    sumar puntaje 1
+fin
+
+crear_juego "SiPi - Juego con sonido generado" 640 480
+    sprite jugador 300 220 40 40 "cian"
+    sprite meta 50 400 30 30 "verde"
+    puntaje_inicial 0
+    mostrar_puntaje
+    tono moneda 880 0.15
+    chocar jugador meta ganar_punto() moneda
+fin

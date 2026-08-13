@@ -1,0 +1,2 @@
+src/sipi_cli.py usr/share/sipi/
+pkg-assets/bin/sipi-cli usr/bin/

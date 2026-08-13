@@ -1,0 +1,26 @@
+programa "Lista de tareas con funciones avanzadas"
+
+funcion calcular_precio_total(precio, cantidad)
+    devolver precio * cantidad
+fin
+
+lista_crear tareas
+lista_agregar tareas "Terminar el proyecto NovaLab"
+lista_agregar tareas "Revisar el codigo de SiPi"
+lista_agregar tareas "Descansar un rato"
+
+decir "Mis tareas pendientes:"
+para_cada tarea en tareas
+    decir "- {tarea}"
+fin
+
+llamar_valor calcular_precio_total(1500, 3) -> total_compra
+decir "Total de la compra: {total_compra}"
+
+variable edad = 22
+variable tiene_carnet = verdadero
+si edad >= 18 y tiene_carnet == verdadero
+    decir "Puede retirar el pedido"
+sino
+    decir "No puede retirar el pedido"
+fin

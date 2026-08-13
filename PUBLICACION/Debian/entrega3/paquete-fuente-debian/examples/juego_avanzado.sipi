@@ -1,0 +1,21 @@
+programa "Juego avanzado - atrapa la meta, evita el obstaculo"
+
+funcion ganar_punto()
+    sumar puntaje 1
+    decir "Punto ganado! Puntaje actual: {puntaje}"
+fin
+
+funcion perder()
+    decir "Chocaste con el obstaculo. Puntaje final: {puntaje}"
+fin
+
+crear_juego "SiPi - Juego Avanzado" 640 480
+    sprite jugador 300 220 40 40 "cian"
+    sprite obstaculo 500 100 30 30 "rojo"
+    sprite meta 50 400 30 30 "verde"
+    velocidad 6
+    puntaje_inicial 0
+    mostrar_puntaje
+    chocar jugador meta ganar_punto()
+    chocar jugador obstaculo perder()
+fin

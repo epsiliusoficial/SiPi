@@ -1,0 +1,9 @@
+programa "Generador de aplicaciones reales"
+
+decir "Generando proyecto de app para Android..."
+generar_app_android "MiPrimeraApp"
+
+decir "Generando proyecto de programa para Windows..."
+generar_app_windows "MiPrimerPrograma"
+
+decir "Listo. Revisa las carpetas MiPrimeraApp_android y MiPrimerPrograma_windows"

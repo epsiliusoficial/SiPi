@@ -1,0 +1,18 @@
+programa "NavegacionSeguraV41_21"
+
+diccionario_crear usuario
+diccionario_asignar usuario "nombre" "Mateo"
+
+// Con '?': una clave faltante da 'nulo' de verdad, no texto vacio
+diccionario_obtener usuario "email"? -> correo
+si correo != nulo
+    decir "Correo: {correo}"
+sino
+    decir "Todavia no cargaste un correo"
+fin
+
+diccionario_asignar usuario "email" "mateo@ejemplo.com"
+diccionario_obtener usuario "email"? -> correo2
+si correo2 != nulo
+    decir "Ahora si: {correo2}"
+fin

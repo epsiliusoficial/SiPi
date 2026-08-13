@@ -1,0 +1,6 @@
+programa "Test3D"
+escena_3d "Cubo Girando" 400 300
+    figura cubo 0 0 0 100 "rojo"
+    figura piramide 150 0 0 80 "verde"
+    rotacion_velocidad 2
+fin

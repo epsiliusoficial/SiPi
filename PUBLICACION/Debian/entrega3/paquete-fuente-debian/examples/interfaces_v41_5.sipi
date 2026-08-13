@@ -1,0 +1,29 @@
+programa "InterfacesV41_5"
+
+interfaz Sonable
+    metodo hacer_sonido()
+    fin
+fin
+
+clase Animal
+    nombre = ""
+fin
+
+clase Perro hereda_de Animal implementa Sonable
+    metodo hacer_sonido()
+        devolver "Guau!"
+    fin
+fin
+
+clase Gato hereda_de Animal implementa Sonable
+    metodo hacer_sonido()
+        devolver "Miau!"
+    fin
+fin
+
+nuevo Perro() -> perro
+nuevo Gato() -> gato
+llamar_metodo perro "hacer_sonido"() -> s1
+llamar_metodo gato "hacer_sonido"() -> s2
+decir "Perro: {s1}"
+decir "Gato: {s2}"

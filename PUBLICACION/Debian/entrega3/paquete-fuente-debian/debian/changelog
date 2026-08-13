@@ -1,0 +1,86 @@
+sipi (41.24.0-4) unstable; urgency=medium
+
+  * Actualizada la licencia (LICENSE / debian/copyright) con permiso
+    explicito del autor: se agrego una "excepcion de distribucion en
+    paquetes" que autoriza a cualquier distribucion de sistema
+    operativo (Debian/APT, incluida Vinari OS) a incluir SiPi en sus
+    repositorios oficiales y redistribuirlo a sus usuarios, siempre
+    que se cumplan las 4 condiciones listadas en el texto completo
+    (sin modificar el codigo, conservando el aviso de copyright,
+    atribuyendo la autoria, distribucion gratuita para el usuario
+    final). Esto desbloquea el pedido original de Vinari OS de incluir
+    SiPi en sus repositorios -- ya no hace falta un permiso por fuera
+    de esta licencia para ese caso puntual.
+
+ -- Mateo (NovaLab Corporation) <mateo@novalab.example>  Wed, 12 Aug 2026 18:00:00 +0000
+
+sipi (41.24.0-3) unstable; urgency=medium
+
+  * Correcciones encontradas corriendo lintian de verdad sobre los .deb
+    ya construidos (antes no se pudo instalar por un 404 pasajero del
+    mirror de Ubuntu):
+    - El placeholder de contacto "<contacto pendiente de publicar>" no
+      es un email valido segun la Politica de Debian (falta un punto
+      en el dominio) -- lintian lo marcaba como ERROR
+      (bogus-mail-host-in-debian-changelog, malformed-contact).
+      Reemplazado por "mateo@novalab.example" (dominio .example,
+      reservado por RFC 2606 para placeholders de documentacion que
+      nunca resuelven a nada real) -- SIGUE SIENDO UN PLACEHOLDER,
+      hay que reemplazarlo por un contacto real antes de publicar.
+    - Campo Homepage con un valor no-URL generaba bad-homepage; se
+      quito el campo (mejor ausente que invalido) hasta tener un
+      repositorio real que enlazar.
+    - docs/CHANGELOG.md (el changelog de upstream del lenguaje) se
+      instalaba DOS veces con nombres distintos porque estaba listado
+      a la vez en debian/sipi.docs y pasado a dh_installchangelogs;
+      ahora solo se pasa a dh_installchangelogs, que lo instala con el
+      nombre canonico que exige la Politica de Debian
+      (usr/share/doc/sipi/changelog.gz).
+    - Agregado debian/*.lintian-overrides documentando el unico
+      falso positivo real que quedo (spelling-error-in-copyright
+      "autor" -> "author": es espanol correcto, no un typo).
+  * Con estos cambios, lintian --pedantic corre limpio (0 errores,
+    0 warnings, solo el override documentado).
+
+ -- Mateo (NovaLab Corporation) <mateo@novalab.example>  Wed, 12 Aug 2026 12:00:00 +0000
+
+sipi (41.24.0-2) unstable; urgency=medium
+
+  * Corregido bug real encontrado al probar instalacion/desinstalacion
+    limpia con apt: sipi-editor guardaba su config
+    (editor_config.json) al lado de editor_sipi.py, que en una
+    instalacion de paquete cae en /usr/share/sipi -- de solo lectura
+    para un usuario sin privilegios de root. El editor ahora usa la
+    carpeta de configuracion del usuario (XDG_CONFIG_HOME/~/.config en
+    Linux/Mac, %APPDATA% en Windows).
+  * Los wrappers de /usr/bin ahora fijan PYTHONDONTWRITEBYTECODE=1
+    para que Python no deje __pycache__/*.pyc en /usr/share/sipi
+    (encontrado por 'apt remove' real: dpkg avisaba "directory not
+    empty" al desinstalar por estos archivos generados en runtime).
+  * Categories del .desktop del editor ahora incluye "Utility"
+    (sugerido por desktop-file-validate).
+
+ -- Mateo (NovaLab Corporation) <mateo@novalab.example>  Wed, 12 Aug 2026 00:00:00 +0000
+
+sipi (41.24.0-1) unstable; urgency=medium
+
+  * Primer empaquetado Debian de SiPi, separado en cuatro binarios:
+    - sipi: motor/runtime del interprete y comando `sipi`.
+    - sipi-cli: interfaz de linea de comandos profesional del proyecto.
+    - sipi-editor: editor visual (GUI, requiere python3-tk), con entrada
+      de menu (.desktop), icono e integracion MIME para archivos .sipi.
+    - sipi-examples: coleccion de programas de ejemplo.
+  * Paginas de manual: sipi(1), sipi-cli(1), sipi-editor(1).
+  * Completions de Bash y Zsh para los tres comandos.
+  * Corregido: el terminal integrado y la vista previa en vivo del
+    editor mostraban caracteres corruptos (mojibake) en salidas con
+    tildes/enies/emojis -- las llamadas a subprocess.run() no fijaban
+    encoding="utf-8" explicito, asi que Python decodificaba la salida
+    del proceso hijo con la codificacion de la consola del sistema
+    (cp1252/cp850 en Windows) en vez de UTF-8, aunque el propio
+    sipi.py ya reconfigura su stdout a UTF-8. Corregido fijando
+    encoding="utf-8", errors="replace" en ambas llamadas, y agregando
+    "chcp 65001" antes de abrir la consola real de Windows al usar
+    "Ejecutar".
+
+ -- Mateo (NovaLab Corporation) <mateo@novalab.example>  Tue, 11 Aug 2026 00:00:00 +0000

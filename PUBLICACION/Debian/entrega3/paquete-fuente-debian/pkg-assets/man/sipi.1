@@ -1,0 +1,113 @@
+.TH SIPI 1 "2026-08-11" "SiPi 41.24.0" "SiPi User Manual"
+.SH NAME
+sipi \- interprete del lenguaje de programacion SiPi (en espanol)
+.SH SYNOPSIS
+.B sipi
+[\fIARCHIVO.sipi\fR]
+.br
+.B sipi
+\fB\-\-repl\fR
+.br
+.B sipi
+\fB\-\-formatear\fR \fIARCHIVO.sipi\fR
+.br
+.B sipi
+\fB\-\-corregir\fR \fIARCHIVO.sipi\fR
+.br
+.B sipi
+\fB\-\-revisar\fR \fIARCHIVO.sipi\fR
+.br
+.B sipi
+[\fB\-\-sin\-cache\fR] [\fB\-\-depurar\fR] \fIARCHIVO.sipi\fR
+.br
+.B sipi
+{\fB\-h\fR | \fB\-\-help\fR | \fB\-\-ayuda\fR}
+.SH DESCRIPTION
+\fBSiPi\fR es un lenguaje de programacion con sintaxis completamente en
+espanol, pensado para que cualquiera \(em desde quien recien empieza a
+programar hasta un equipo tecnico armando una herramienta interna \(em
+pueda escribir programas reales: interfaces graficas, juegos, paginas
+web y bases de datos, sin pelearse primero con sintaxis en ingles.
+.PP
+El comando
+.B sipi
+ejecuta un archivo
+.I .sipi
+de punta a punta. Sin argumentos, o con
+.BR \-\-repl ,
+abre un REPL interactivo.
+.SH OPTIONS
+.TP
+.I ARCHIVO.sipi
+Ejecuta el programa contenido en ese archivo.
+.TP
+.BR \-\-repl ", " repl
+Abre el interprete interactivo (REPL) de SiPi. Es tambien el
+comportamiento por defecto si no se pasa ningun argumento.
+.TP
+.BR \-h ", " \-\-help ", " \-\-ayuda
+Muestra un resumen de uso y termina.
+.TP
+.BI \-\-formatear " ARCHIVO.sipi"
+Reindenta el archivo en el lugar (4 espacios por nivel) y lo sobreescribe.
+.TP
+.BI \-\-corregir " ARCHIVO.sipi"
+Autocorrector: detecta y arregla errores tipograficos comunes (comandos
+mal escritos por poco, como \fBdecid\fR en vez de \fBdecir\fR) y
+sobreescribe el archivo con las correcciones aplicadas.
+.TP
+.BI \-\-revisar " ARCHIVO.sipi"
+Analizador estatico: revisa el archivo sin ejecutarlo y muestra un
+reporte de problemas potenciales (variables no usadas, posibles typos,
+etc.), sin modificar nada.
+.TP
+.B \-\-sin\-cache
+Al ejecutar un archivo, ignora la cache de bytecode compilado
+.RI ( .sipic ,
+ver
+.B /usr/share/doc/sipi/CACHE.md )
+y fuerza una recompilacion completa.
+.TP
+.B \-\-depurar
+Equivalente a poner \fBmodo_debug\fR como primera linea del programa:
+imprime cada linea antes de ejecutarla.
+.SH FILES
+.TP
+.I /usr/share/sipi/
+Motor del interprete y recursos compartidos.
+.TP
+.I /usr/share/doc/sipi/
+Documentacion completa del lenguaje (referencia de sintaxis, funciones,
+changelog, limitaciones conocidas).
+.TP
+.I /usr/share/doc/sipi/examples/
+Programas de ejemplo listos para ejecutar con
+.BR "sipi ARCHIVO.sipi" .
+.SH EXIT STATUS
+.B 0
+en ejecucion exitosa;
+.B 1
+si el programa SiPi termino con un error (se imprime la linea y el
+mensaje correspondiente antes de salir).
+.SH EXAMPLES
+.TP
+Ejecutar un programa:
+.B sipi mi_programa.sipi
+.TP
+Abrir el REPL interactivo:
+.B sipi
+.TP
+Revisar un archivo sin correrlo:
+.B sipi --revisar mi_programa.sipi
+.SH SEE ALSO
+.BR sipi\-cli (1),
+.BR sipi\-editor (1)
+.br
+Documentacion completa en
+.IR /usr/share/doc/sipi/ .
+.SH AUTHOR
+Mateo \(em NovaLab Corporation.
+.SH COPYRIGHT
+Copyright (c) 2026 Mateo \(em NovaLab Corporation. Software propietario,
+todos los derechos reservados; ver
+.IR /usr/share/doc/sipi/copyright .

@@ -1,0 +1,22 @@
+programa "PatternMatchingV41_20"
+
+variable dia = "viernes"
+seleccionar dia
+    caso "lunes"
+        decir "Odio los lunes"
+    caso "viernes"
+        decir "Por fin!"
+    otro
+        decir "Dia normal"
+fin
+
+// Tambien funciona con indentacion, sin 'fin' explicito
+variable numero = 2
+seleccionar numero
+    caso 1
+        decir "uno"
+    caso 2
+        decir "dos"
+    otro
+        decir "otro numero"
+decir "Listo"

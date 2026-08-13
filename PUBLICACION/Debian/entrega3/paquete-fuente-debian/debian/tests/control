@@ -1,0 +1,19 @@
+Test-Command: /bin/sh debian/tests/smoke-sipi
+Depends: sipi
+Restrictions: allow-stderr
+
+Test-Command: /bin/sh debian/tests/smoke-cli
+Depends: sipi-cli
+Restrictions: allow-stderr
+
+Test-Command: /bin/sh debian/tests/smoke-editor
+Depends: sipi-editor, xvfb
+Restrictions: allow-stderr
+
+Test-Command: /bin/sh debian/tests/smoke-examples
+Depends: sipi, sipi-examples
+Restrictions: allow-stderr
+
+Test-Command: /bin/sh debian/tests/smoke-integracion
+Depends: sipi-editor, desktop-file-utils, shared-mime-info
+Restrictions: allow-stderr

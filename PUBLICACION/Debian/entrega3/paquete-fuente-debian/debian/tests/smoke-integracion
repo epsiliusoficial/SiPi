@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+
+echo "== .desktop instalado y valido segun desktop-file-utils =="
+test -f /usr/share/applications/sipi-editor.desktop
+desktop-file-validate /usr/share/applications/sipi-editor.desktop
+
+echo "== .desktop referencia el MimeType correcto =="
+grep -q "^MimeType=text/x-sipi;" /usr/share/applications/sipi-editor.desktop
+
+echo "== icono instalado =="
+test -f /usr/share/icons/hicolor/scalable/apps/sipi.svg
+
+echo "== mime type text/x-sipi quedo registrado en el sistema =="
+# update-mime-database corre via trigger de dpkg al instalar el
+# paquete; si el trigger no disparo (o esta paquete corriendo en un
+# entorno minimal sin triggers procesados todavia) lo forzamos aca
+# para no dar un falso negativo por timing, y confirmamos el resultado.
+update-mime-database /usr/share/mime > /dev/null 2>&1 || true
+grep -rl "text/x-sipi" /usr/share/mime/packages/ > /dev/null
+
+echo "OK: todos los checks de integracion de escritorio pasaron"

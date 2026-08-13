@@ -1,0 +1,51 @@
+#!/bin/sh
+# Se corre via autopkgtest en una instalacion Debian LIMPIA (solo las
+# dependencias declaradas del paquete, nada del entorno de desarrollo).
+set -eu
+
+echo "== sipi: comando disponible globalmente =="
+command -v sipi
+
+echo "== sipi --ayuda =="
+sipi --ayuda > /tmp/salida_ayuda 2>&1
+grep -qi "Uso:" /tmp/salida_ayuda
+
+echo "== sipi: ejecutar un programa real =="
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+cat > "$TMP/hola.sipi" << 'SIPI'
+programa "Test"
+decir "hola desde el paquete Debian"
+SIPI
+salida="$(sipi "$TMP/hola.sipi")"
+echo "$salida" | grep -q "hola desde el paquete Debian"
+
+echo "== sipi: error real (variable no declarada) termina con codigo != 0 =="
+cat > "$TMP/roto.sipi" << 'SIPI'
+decir variable_que_no_existe
+SIPI
+if sipi "$TMP/roto.sipi" > /tmp/salida_error 2>&1; then
+    echo "FALLO: se esperaba un codigo de salida distinto de 0" >&2
+    exit 1
+fi
+
+echo "== man sipi =="
+man -w sipi > /dev/null
+
+echo "== completions de bash instalados =="
+test -f /usr/share/bash-completion/completions/sipi
+
+echo "== completions de zsh instalados =="
+test -f /usr/share/zsh/vendor-completions/_sipi
+
+echo "== mime type registrado =="
+test -f /usr/share/mime/packages/sipi.xml
+
+echo "== sipi: /usr/share/sipi queda limpio tras uso normal (sin __pycache__) =="
+sipi "$TMP/hola.sipi" > /dev/null 2>&1 || true
+if [ -d /usr/share/sipi/__pycache__ ]; then
+    echo "FALLO: quedo __pycache__ en /usr/share/sipi (PYTHONDONTWRITEBYTECODE no se aplico)" >&2
+    exit 1
+fi
+
+echo "OK: todos los checks de sipi pasaron"

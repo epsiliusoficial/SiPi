@@ -1,0 +1,24 @@
+programa "Panel completo con todos los widgets en coordenadas dinamicas"
+
+lista_crear opciones_menu
+lista_agregar opciones_menu "Configuracion"
+lista_agregar opciones_menu "Perfil"
+lista_agregar opciones_menu "Ayuda"
+
+variable columna_izquierda = 30
+variable fila_actual = 20
+variable ancho_barra_progreso = 220
+
+funcion confirmar_panel()
+    decir "Acepto terminos: {acepto_terminos}"
+    decir "Progreso actual: {progreso_descarga}"
+    decir "Opcion elegida: {opcion_menu}"
+fin
+
+ventana "SiPi - Panel con coordenadas dinamicas" 420 380
+    etiqueta "Todas las posiciones de este panel se calculan con variables" columna_izquierda fila_actual
+    casilla "Acepto los terminos y condiciones" columna_izquierda 60 acepto_terminos
+    barra_progreso progreso_descarga columna_izquierda 100 ancho_barra_progreso 40
+    lista columna_izquierda 140 30 5 opciones_menu -> opcion_menu
+    boton "Confirmar" columna_izquierda 260 confirmar_panel()
+fin
