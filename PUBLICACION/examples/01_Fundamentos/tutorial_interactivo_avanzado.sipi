@@ -1,0 +1,86 @@
+programa "Tutorial interactivo de SiPi - Avanzado"
+
+modo_principiante
+
+decir "==================================================="
+decir " Tutorial avanzado de SiPi"
+decir "==================================================="
+decir ""
+decir "Esto asume que ya viste el tutorial basico ('sipi tutorial')."
+decir "Aca vamos a temas de proyectos mas grandes y reales."
+decir ""
+
+decir "--- Paso 1: Diccionarios ---"
+variable persona = diccionario_crear()
+diccionario_asignar persona "nombre" "Ana"
+diccionario_asignar persona "edad" 30
+decir "diccionario_crear() + diccionario_asignar: {persona}"
+decir ""
+
+decir "--- Paso 2: Programacion orientada a objetos ---"
+clase Animal
+    metodo iniciar(nombre_animal)
+        diccionario_asignar este "nombre" nombre_animal
+    fin
+
+    metodo saludar()
+        variable nombre_actual = diccionario_obtener este "nombre"
+        decir "Soy {nombre_actual} y hago ruido"
+    fin
+fin
+
+variable mi_animal = nuevo Animal("Rex")
+llamar mi_animal.saludar()
+decir "clase + metodo + nuevo: la instancia se llama 'este' adentro de los metodos"
+decir ""
+
+decir "--- Paso 3: Manejo de errores mas completo ---"
+funcion dividir_seguro(a, b)
+    si b == 0
+        lanzar_error "No se puede dividir por cero"
+    fin
+    devolver a / b
+fin
+
+intentar
+    variable resultado_div = dividir_seguro(10, 0)
+    decir "No deberia llegar aca: {resultado_div}"
+capturar
+    decir "Capturamos el error real de una funcion: {error}"
+fin
+decir ""
+
+decir "--- Paso 4: Base de datos real (SQLite) ---"
+sqlite_conectar "tutorial_avanzado.db" como db
+sqlite_ejecutar db "CREATE TABLE IF NOT EXISTS notas (id INTEGER PRIMARY KEY AUTOINCREMENT, texto TEXT)"
+sqlite_ejecutar db "INSERT INTO notas (texto) VALUES ('Primera nota real en disco')"
+sqlite_consultar db "SELECT * FROM notas" en notas_guardadas
+decir "Filas guardadas de verdad en sipi.db: {notas_guardadas}"
+sqlite_cerrar db
+borrar_archivo "tutorial_avanzado.db"
+decir ""
+
+decir "--- Paso 5: Hilos en paralelo ---"
+funcion calcular(n)
+    devolver n * n
+fin
+hilo_crear calcular(7) -> h
+hilo_resultado h -> resultado_hilo
+decir "hilo_crear + hilo_resultado: 7 al cuadrado calculado en otro hilo = {resultado_hilo}"
+decir "(cada hilo copia las variables globales al crearse -- no comparten estado en vivo)"
+decir ""
+
+decir "--- Paso 6: Proyectos de varios archivos ---"
+decir "SiPi no tiene 'import' entre archivos .sipi -- los proyectos grandes se"
+decir "organizan por convencion de carpeta. Si estas usando Claude para escribir"
+decir "SiPi, mira la carpeta claude/ del repositorio: tiene patrones ya probados"
+decir "(base de datos, hilos, backend web, POO) y un generador de proyectos."
+decir ""
+
+decir "==================================================="
+decir " Fin del tutorial avanzado."
+decir "==================================================="
+decir " - docs/FUNCTIONS.md tiene el catalogo completo de comandos"
+decir " - docs/LANGUAGE_SPEC.md tiene la especificacion formal"
+decir " - claude/patrones/ tiene mas ejemplos de este nivel, verificados"
+decir ""

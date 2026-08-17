@@ -1,0 +1,28 @@
+programa "Patron: hilos en paralelo"
+
+// IMPORTANTE: cada hilo toma su propia copia de las variables globales al
+// crearse -- no comparten estado en vivo. Comunicar resultados con
+// 'devolver' + 'hilo_resultado', nunca escribiendo una variable global
+// desde dentro del hilo.
+
+funcion trabajo_pesado(n)
+    variable total = 0
+    repetir n veces
+        variable total = total + 1
+    fin
+    devolver total * 2
+fin
+
+hilo_crear trabajo_pesado(1000) -> h1
+hilo_crear trabajo_pesado(2000) -> h2
+hilo_crear trabajo_pesado(3000) -> h3
+
+hilo_resultado h1 -> r1
+hilo_resultado h2 -> r2
+hilo_resultado h3 -> r3
+
+decir "Resultado 1: {r1}"
+decir "Resultado 2: {r2}"
+decir "Resultado 3: {r3}"
+
+decir "Todos los hilos terminaron."

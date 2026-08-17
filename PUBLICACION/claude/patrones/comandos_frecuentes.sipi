@@ -1,0 +1,17 @@
+variable milista = [1, 2, 3]
+variable valor = 4
+
+lista_agregar milista valor
+lista_ordenar milista
+crear_archivo "ruta.txt" "contenido"
+leer_archivo "ruta.txt" -> contenido
+diccionario_crear -> dic
+diccionario_asignar dic "clave" valor
+azar_entre 1 10 -> numero
+
+seleccionar valor
+    caso 1
+        decir "es uno"
+    otro
+        decir "otro caso"
+fin

@@ -1,0 +1,16 @@
+# Dependencias de Python para el editor grafico de SiPi.
+#
+# El MOTOR (src/sipi.py, sipi_cli.py) no necesita nada de esta lista --
+# corre solo con la libreria estandar de Python 3.7+. Estas dependencias
+# son solo para quien quiera abrir el editor grafico (editor_sipi.py /
+# editor_sipi_kids.py).
+#
+# Instalar con: pip install -r requirements.txt
+# (en sistemas con PEP 668 puede hacer falta: pip install -r requirements.txt --break-system-packages)
+
+customtkinter>=5.2.0
+
+# Pillow es una dependencia de customtkinter (maneja las imagenes/iconos
+# escalados). Se declara aca tambien de forma explicita porque
+# editor_sipi_kids.py la usa directo para decodificar los iconos.
+Pillow>=9.0.0

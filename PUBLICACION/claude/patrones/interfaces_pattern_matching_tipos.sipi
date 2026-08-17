@@ -1,0 +1,50 @@
+programa "Patron: interfaces, pattern matching y tipos"
+
+interfaz PuedeCorrer
+    metodo correr()
+fin
+
+clase Animal
+    campo nombre = ""
+    metodo hacer_sonido()
+        decir "..."
+    fin
+fin
+
+clase Perro hereda_de Animal implementa PuedeCorrer
+    metodo hacer_sonido()
+        decir "Guau"
+    fin
+    metodo correr()
+        decir "El perro corre"
+    fin
+fin
+
+nuevo Perro() -> p
+llamar_metodo p "hacer_sonido"()
+llamar_metodo p "correr"()
+es_instancia_de p Animal -> es_animal
+decir "Es instancia de Animal: {es_animal}"
+
+// Tipado opcional: ayuda a que el motor detecte errores de tipo antes
+// de correr, sin obligar a tipar todo el programa.
+funcion sumar(a: entero, b: entero) -> entero
+    devolver a + b
+fin
+
+llamar_valor sumar(3, 4) -> resultado_suma
+decir "Suma tipada: {resultado_suma}"
+
+// Pattern matching: mas legible que una cadena larga de si/sino cuando
+// hay varios casos posibles para un mismo valor.
+variable dia = 3
+seleccionar dia
+    caso 1
+        decir "Lunes"
+    caso 2
+        decir "Martes"
+    caso 3
+        decir "Miercoles"
+    otro
+        decir "Otro dia"
+fin

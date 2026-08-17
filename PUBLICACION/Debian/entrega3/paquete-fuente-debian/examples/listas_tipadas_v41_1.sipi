@@ -1,6 +1,0 @@
-programa "ListasTipadasV41_1"
-lista_crear puntajes: lista<entero>
-lista_agregar puntajes 90
-lista_agregar puntajes 85
-lista_longitud puntajes -> total
-decir "Puntajes cargados: {total}"

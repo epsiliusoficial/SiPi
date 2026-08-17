@@ -1,0 +1,25 @@
+programa "Patron: backend HTTP real"
+
+// escuchar_ruta registra funciones que responden peticiones. El servidor
+// real se levanta con iniciar_api_web -- eso bloquea el programa (se queda
+// escuchando), asi que en este patron de referencia lo dejamos comentado.
+// Para probar de verdad: descomentar la ultima linea y correr el archivo,
+// despues visitar http://localhost:8080/api/saludo en el navegador.
+
+funcion responder_saludo(pedido)
+    variable resultado = diccionario_crear()
+    diccionario_asignar resultado "mensaje" "Hola desde SiPi"
+    diccionario_asignar resultado "ok" verdadero
+    devolver resultado
+fin
+
+funcion responder_eco(pedido)
+    variable cuerpo = diccionario_obtener pedido "cuerpo"
+    devolver cuerpo
+fin
+
+escuchar_ruta "/api/saludo" con responder_saludo
+escuchar_ruta "/api/eco" con responder_eco
+
+decir "Rutas registradas: /api/saludo y /api/eco"
+// iniciar_api_web 8080

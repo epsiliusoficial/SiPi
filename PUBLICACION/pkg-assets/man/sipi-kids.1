@@ -1,0 +1,33 @@
+.TH SIPI\-KIDS 1 "2026-08-15" "SiPi 41.24.0" "SiPi User Manual"
+.SH NAME
+sipi\-kids \- editor de SiPi por bloques, para chicos y quien recien empieza
+.SH SYNOPSIS
+.B sipi-kids
+[\fIARCHIVO.sipi\fR]
+.SH DESCRIPTION
+.B sipi\-kids
+abre una version simplificada del editor de SiPi: en vez de escribir
+la sintaxis a mano, se arma el programa clickeando bloques grandes y
+coloridos (Inicio, Decir algo, Preguntar y guardar, Numero al azar, Si
+pasa esto..., Repetir varias veces, Lista de cosas) que insertan el
+codigo correcto donde este el cursor. El area de codigo sigue siendo
+texto real y editable, y corre con el mismo motor que
+.BR sipi (1).
+.PP
+Incluye un sistema de logros persistente (boton "Mis logros") y una
+ayuda de IA simplificada, ademas de un boton "\(lqExecutar!\(rq" que
+muestra el resultado directo en pantalla sin necesidad de terminal.
+.PP
+Requiere una instalacion de
+.B python3\-tk
+(interfaz grafica Tk), que se instala automaticamente como dependencia
+de este paquete.
+.SH FILES
+Guarda el progreso de logros en
+.I ~/.config/sipi/sipi_kids_progreso.json
+.SH SEE ALSO
+.BR sipi (1),
+.BR sipi\-editor (1),
+.BR sipi\-ia (1)
+.SH AUTHOR
+Mateo \(em NovaLab Corporation.

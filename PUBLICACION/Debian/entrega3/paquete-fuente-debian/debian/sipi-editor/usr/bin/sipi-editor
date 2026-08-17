@@ -1,4 +1,0 @@
-#!/bin/sh
-# Wrapper del editor visual de SiPi (requiere python3-tk).
-export PYTHONDONTWRITEBYTECODE=1
-exec python3 /usr/share/sipi/editor_sipi.py "$@"

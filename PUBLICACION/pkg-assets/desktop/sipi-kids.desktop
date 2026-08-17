@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=SiPi Kids
+Name[es]=SiPi Kids
+GenericName=SiPi for Kids
+GenericName[es]=SiPi para chicos
+Comment=Editor de SiPi por bloques, para chicos y quien recien empieza
+Comment[es]=Editor de SiPi por bloques, para chicos y quien recien empieza
+Exec=sipi-kids %f
+TryExec=sipi-kids
+Icon=sipi
+Terminal=false
+Categories=Development;Education;
+MimeType=text/x-sipi;
+Keywords=SiPi;programacion;chicos;educacion;bloques;
+StartupNotify=true

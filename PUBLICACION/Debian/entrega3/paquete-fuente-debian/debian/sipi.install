@@ -1,8 +1,0 @@
-src/sipi.py usr/share/sipi/
-src/ast_sipi.py usr/share/sipi/
-src/lexer_sipi.py usr/share/sipi/
-pkg-assets/bin/sipi usr/bin/
-pkg-assets/completions/bash/sipi usr/share/bash-completion/completions/
-pkg-assets/completions/zsh/_sipi usr/share/zsh/vendor-completions/
-pkg-assets/mime/sipi.xml usr/share/mime/packages/
-pkg-assets/icons/sipi.svg usr/share/icons/hicolor/scalable/apps/

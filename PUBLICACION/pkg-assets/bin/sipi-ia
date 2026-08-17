@@ -1,0 +1,6 @@
+#!/bin/sh
+# Wrapper de SiPi IA Agente: herramienta de linea de comandos para generar,
+# corregir y construir proyectos SiPi con IA (pensada tambien para que otras
+# IAs la usen via --json). Ver 'sipi-ia --help'.
+export PYTHONDONTWRITEBYTECODE=1
+exec python3 /usr/share/sipi/sipi_ia_agente.py "$@"

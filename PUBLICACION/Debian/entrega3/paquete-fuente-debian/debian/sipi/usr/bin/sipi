@@ -1,8 +1,0 @@
-#!/bin/sh
-# Wrapper del interprete SiPi. El motor real es un script de Python puro
-# (sin dependencias de pip) instalado en /usr/share/sipi/sipi.py.
-# PYTHONDONTWRITEBYTECODE evita que Python deje __pycache__/*.pyc en
-# /usr/share/sipi (directorio de sistema, no le corresponde tener
-# archivos generados en runtime -- dpkg no los limpia al desinstalar).
-export PYTHONDONTWRITEBYTECODE=1
-exec python3 /usr/share/sipi/sipi.py "$@"

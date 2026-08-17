@@ -1,0 +1,22 @@
+programa "Patron: base de datos SQLite"
+
+sqlite_conectar "datos_patron.db" como db
+
+sqlite_ejecutar db "CREATE TABLE IF NOT EXISTS tareas (id INTEGER PRIMARY KEY AUTOINCREMENT, titulo TEXT, hecha INTEGER)"
+
+sqlite_ejecutar db "INSERT INTO tareas (titulo, hecha) VALUES ('Aprender SiPi', 0)"
+sqlite_ejecutar db "INSERT INTO tareas (titulo, hecha) VALUES ('Escribir un programa grande', 0)"
+
+sqlite_consultar db "SELECT * FROM tareas" en filas
+
+decir "Tareas guardadas:"
+para_cada fila en filas
+    decir "  #{fila['id']}: {fila['titulo']} (hecha={fila['hecha']})"
+fin
+
+sqlite_ejecutar db "UPDATE tareas SET hecha = 1 WHERE titulo = 'Aprender SiPi'"
+
+sqlite_cerrar db
+borrar_archivo "datos_patron.db"
+
+decir "Listo."

@@ -1,0 +1,21 @@
+programa "Patron: operador pipe"
+
+funcion es_par(n)
+    devolver n % 2 == 0
+fin
+
+funcion doble(n)
+    devolver n * 2
+fin
+
+variable numeros = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+// El pipe encadena transformaciones de listas sin variables temporales
+// ni parentesis anidados. Solo funciona con los comandos de lista que
+// tiene sentido encadenar (lista_filtrar, lista_mapear, lista_reducir,
+// suma_lista, promedio_lista, lista_contiene, lista_longitud) -- otros
+// comandos no estan soportados dentro de un pipe.
+variable resultado = numeros |> lista_filtrar(es_par) |> lista_mapear(doble) |> suma_lista
+
+decir "Pares del 1 al 10, duplicados y sumados: {resultado}"
+// (2+4+6+8+10) * 2 = 60

@@ -1,0 +1,5 @@
+#!/bin/sh
+# Wrapper del servidor HTTP de SiPi IA (expone el agente en red para otras
+# IAs/herramientas). Por defecto escucha solo en 127.0.0.1. Ver 'sipi-ia-servidor --help'.
+export PYTHONDONTWRITEBYTECODE=1
+exec python3 /usr/share/sipi/sipi_ia_servidor.py "$@"

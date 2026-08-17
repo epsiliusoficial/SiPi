@@ -1,0 +1,16 @@
+programa "POO: cuenta bancaria"
+
+clase CuentaBancaria
+    saldo = 0
+    metodo depositar(monto)
+        diccionario_asignar este "saldo" (este["saldo"] + monto)
+    fin
+    metodo consultar()
+        devolver este["saldo"]
+    fin
+fin
+
+nuevo CuentaBancaria() -> cuenta
+llamar_metodo cuenta "depositar"(500)
+llamar_metodo cuenta "consultar"() -> saldo_actual
+decir "Saldo: {saldo_actual}"

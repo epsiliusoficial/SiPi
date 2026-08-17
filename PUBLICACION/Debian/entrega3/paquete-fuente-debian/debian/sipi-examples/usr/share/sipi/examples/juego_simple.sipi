@@ -1,7 +1,0 @@
-programa "Juego simple - mueve el cuadrado con las flechas"
-
-crear_juego "SiPi - Mini Juego" 640 480
-    sprite jugador 300 220 40 40 "cian"
-    sprite obstaculo 500 100 30 30 "rojo"
-    sprite meta 50 400 30 30 "verde"
-fin

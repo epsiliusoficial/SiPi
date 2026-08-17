@@ -1,8 +1,0 @@
-2b91a618055a038298d3c74325aa87b2  usr/bin/sipi-editor
-e1fcc1267007d65b204c42d04fa5bc69  usr/share/applications/sipi-editor.desktop
-514ededd03d39445ffec5128d685bfa9  usr/share/doc/sipi-editor/changelog.Debian.gz
-f2571bdc1deb799d40bcfe904ee074bd  usr/share/doc/sipi-editor/changelog.gz
-08dc14c7224cf91ab0fbc078cd9177ba  usr/share/doc/sipi-editor/copyright
-254b9ef140a7d6428da97a284fba7f27  usr/share/lintian/overrides/sipi-editor
-ce847faab41f82cd62c6f4578f0f0d53  usr/share/man/man1/sipi-editor.1.gz
-5f7d03955039d6b5c5b3f2752c43c386  usr/share/sipi/editor_sipi.py

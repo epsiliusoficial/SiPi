@@ -1,263 +1,452 @@
-# SiPi
+# SiPi - Código fuente (v41.24.0)
 
-![version](https://img.shields.io/badge/versi%C3%B3n-41.24.0-blue)
-![licencia](https://img.shields.io/badge/licencia-propietaria%20(todos%20los%20derechos%20reservados)-red)
-![python](https://img.shields.io/badge/python-3.10%2B-blue)
-![estado](https://img.shields.io/badge/estado-en%20desarrollo%20activo-brightgreen)
+Este repositorio contiene **solo el código fuente de SiPi**: el
+intérprete, el editor visual, la CLI, los ejemplos y la documentación.
 
-> Los badges de ⭐ estrellas e issues se agregan solos apenas el repo esté en GitHub — reemplazá `TU_USUARIO/TU_REPO` más abajo por la ruta real:
-> `![stars](https://img.shields.io/github/stars/TU_USUARIO/TU_REPO?style=social)` · `![issues](https://img.shields.io/github/issues/TU_USUARIO/TU_REPO)`
+## Qué NO está acá
 
-**Un lenguaje de programación en español, pensado para que alguien sin experiencia previa pueda crear programas de verdad — interfaces gráficas, juegos, páginas web, bases de datos — sin pelearse primero con sintaxis en inglés ni configuración.**
+El empaquetado Debian (`debian/`, reglas de `dpkg-buildpackage`, los
+`.deb` ya construidos) se movió a un repositorio de empaquetado
+aparte, para que este repo de código fuente no dependa de -ni se
+mezcle con- un sistema de distribución en particular. Ver
+`PACKAGING_VINARI.md` para el criterio de empaquetado, que sigue
+siendo válido como referencia aunque los archivos `debian/` ya no
+vivan acá.
 
-```sipi
-programa "Mi Primer Programa"
+## Lanzadores y herramientas de distribución (reorganizados, sin Debian)
 
-variable nombre = "Mateo"
-decir "Hola, {nombre}! Esto es SiPi funcionando de verdad."
+Estos archivos existían en versiones anteriores del proyecto y se
+habían perdido al separar el empaquetado Debian del código fuente —
+quedan restaurados acá, **reorganizados fuera de cualquier carpeta
+específica de un sistema de empaquetado**:
 
-variable contador = 0
-repetir 5 veces
-    sumar contador 1
-    decir "Contador: {contador}"
-fin
+- **`pkg-assets/bin/`** — lanzadores para Linux/Mac (`sipi`,
+  `sipi-editor`, `sipi-cli`, y los nuevos `sipi-kids`, `sipi-ia`,
+  `sipi-ia-servidor`). Cualquier sistema de empaquetado (Debian,
+  Flatpak, un `.pkg` de Mac, lo que sea) los puede instalar en
+  `/usr/bin` o donde corresponda — no son específicos de ningún
+  formato.
+- **`pkg-assets/windows/`** — lanzadores `.bat` para Windows: `sipi.bat`,
+  `sipi-editor.bat`, `sipi-cli.bat`, `sipi-kids.bat`, `sipi-ia.bat`,
+  `sipi-ia-servidor.bat`. Cada uno busca primero el archivo fuente
+  normal (`sipi.py`, `editor_sipi.py`) y si no lo encuentra (carpeta de
+  publicación sin fuente) cae a la versión protegida
+  (`sipi_protegido.py`, `editor_protegido.py`).
+- **`pkg-assets/desktop/`** — entradas de escritorio Linux, ahora
+  incluyendo `sipi-kids.desktop` además de `sipi-editor.desktop`.
+- **`pkg-assets/man/`** — páginas de manual, ahora incluyendo
+  `sipi-kids.1`, `sipi-ia.1`, `sipi-ia-servidor.1`.
+- **`herramientas/proteger_codigo.py`** — genera las versiones
+  "protegidas" para distribuir sin exponer el código fuente en texto
+  plano (`sipi_protegido.py`, `editor_protegido.py`,
+  `generar_exe_protegido.py`): compila cada archivo a bytecode real de
+  Python y genera un loader mínimo que lo decodifica y ejecuta en
+  tiempo real, con **comportamiento idéntico al original** — probado
+  en vivo: mismo resultado exacto corriendo un programa con `sipi.py`
+  y con el `sipi_protegido.py` generado. No es una protección
+  criptográfica (alguien con un decompilador de bytecode puede
+  reconstruir una aproximación del código), pero evita la copia/edición
+  casual, que es el nivel de protección que tiene sentido para un
+  lenguaje educativo. Vive fuera de `src/` para dejar claro que es una
+  herramienta de build, no parte del lenguaje.
+- **`src/generar_exe.py`** — estaba referenciado por el editor (botón
+  "Compilar a ejecutable") pero faltaba en esta entrega; quedó
+  restaurado: compila un `.sipi` puntual a un ejecutable independiente
+  real vía PyInstaller, empaquetando el `.sipi` y el motor de SiPi como
+  datos embebidos.
 
-si contador == 5
-    decir "El contador llego a 5 correctamente."
-sino
-    decir "Algo salio mal."
-fin
+## Bug corregido: SiPi Kids y SiPi IA no se podían abrir
 
-funcion saludar(persona)
-    decir "Hola desde una funcion, {persona}!"
-fin
+La causa: los archivos (`editor_sipi_kids.py`, `sipi_ia_agente.py`,
+`sipi_ia_servidor.py`) existían en `src/`, pero nunca se habían creado
+los lanzadores correspondientes en `pkg-assets/bin/` — solo estaban
+los de `sipi`, `sipi-editor` y `sipi-cli`. Con eso, no había forma de
+abrir SiPi Kids ni de usar SiPi IA por línea de comandos una vez
+instalado el paquete, aunque el código funcionara perfecto corriéndolo
+directo con `python3 archivo.py`. Ya están agregados los tres
+lanzadores que faltaban (ver arriba).
 
-llamar saludar("NovaLab")
+## Estructura
+
+- `src/` - código fuente:
+  - `sipi.py` - intérprete/motor del lenguaje
+  - `editor_sipi.py` - editor visual (Tkinter), con tutorial
+    interactivo, galería de ejemplos rápidos, buscar/reemplazar,
+    zoom de fuente, depurador, terminal integrado y más
+  - `editor_sipi_kids.py` - editor por bloques para chicos
+  - `logros_kids.py` - sistema de logros de SiPi Kids
+  - `sipi_ia.py` - generación, auto-corrección y sesiones conversacionales con IA
+  - `sipi_ia_agente.py` - orquestador multi-archivo y CLI/JSON para otras IAs
+  - `sipi_ia_memoria.py` - índice de proyecto, búsqueda y refactor
+  - `sipi_ia_biblioteca.py` - biblioteca de patrones reutilizables
+  - `sipi_ia_servidor.py` - servidor HTTP de SiPi IA
+  - `generar_exe.py` - compila un `.sipi` a ejecutable independiente
+  - `sipi_cli.py` - CLI de gestión de proyectos
+  - `lexer_sipi.py` / `ast_sipi.py` - lexer/parser reales
+  - `sipi_lsp.py` - soporte de Language Server
+- `examples/` - 47 programas de ejemplo, organizados en 10 categorías
+- `docs/` - documentación
+- `herramientas/` - `proteger_codigo.py` (build tool, ver más abajo)
+- `pkg-assets/` - íconos, `.desktop`, man pages, completions, lanzadores
+  Linux/Mac (`bin/`) y Windows (`windows/`) — insumos reutilizables por
+  cualquier sistema de empaquetado, no específicos de Debian
+
+## Novedades del editor en esta entrega (parte 1)
+
+- **Tutorial**: panel interactivo con 6 lecciones progresivas
+  (programa básico, números, condicionales, bucles, funciones,
+  listas), cada una con botón "Probar en el editor" que carga el
+  código de la lección en una pestaña nueva.
+- **Ejemplos**: galería de recetas cortas (entrada de datos,
+  `mientras`, listas + funciones, manejo de errores) para insertar
+  con un clic.
+- **Buscar** / **Reemplazar**: ahora también como botones de la
+  barra de herramientas (antes solo por atajo de teclado).
+- **A- / A+**: zoom rápido del tamaño de letra sin entrar al panel de
+  Configurar, con aviso temporal en la barra de estado.
+
+## Novedades del editor en esta entrega (parte 2)
+
+- **Iconos propios**: se reemplazaron todos los emojis de la barra de
+  herramientas por íconos vectoriales propios (`src/iconos_editor/`,
+  generados a medida, sin depender de fuentes de emoji del sistema
+  operativo). Cada botón tiene tooltip con su nombre y atajo.
+  Separadores visuales agrupan botones por función (archivo /
+  ejecución / herramientas / búsqueda / zoom / aprendizaje-IA).
+- **Más atajos de teclado**: `Ctrl+N` nuevo, `Ctrl+O` abrir, `Ctrl+D`
+  depurar, `Ctrl+Shift+F` formatear, `Ctrl+= / Ctrl+-` zoom, `F1`
+  tutorial, `Ctrl+I` SiPi IA, `Ctrl+PgUp/PgDn` cambiar de pestaña.
+- **SiPi IA** (botón nuevo, ícono de chip): panel de asistencia con
+  IA integrado al editor. Ver sección dedicada más abajo.
+
+## SiPi IA
+
+Nuevo módulo (`src/sipi_ia.py`) y panel integrado al editor
+(botón **SiPi IA** / `Ctrl+I`) para programar más rápido y resolver
+errores con ayuda de un modelo de IA (Anthropic). No agrega
+dependencias externas: usa `urllib` de la biblioteca estándar.
+
+Cuatro modos, todos con el código resultante listo para insertarse en
+una pestaña nueva de un clic:
+
+1. **Generar código nuevo** a partir de una descripción en lenguaje
+   natural ("un programa que pida 3 números y diga el promedio").
+2. **Completar/extender lo que ya tengo**: toma el código actual del
+   editor + una instrucción puntual ("agregale validación de que no
+   sea negativo") y devuelve el programa completo ya integrado.
+3. **Corregir el último error**: ejecuta el código actual en modo
+   diagnóstico para conseguir el error real del motor, se lo pasa al
+   modelo junto con el código, y devuelve el programa corregido con
+   una explicación breve del bug.
+4. **Explicar el código actual** en español simple, útil para
+   aprender o para entender código ajeno.
+
+La clave de API se pide una sola vez (o se toma de la variable de
+entorno `ANTHROPIC_API_KEY`) y se guarda con permisos restringidos
+(`0600`) en `~/.config/sipi/sipi_ia_config.json` — separada de la
+configuración general del editor. `sipi_ia.py` también se puede usar
+suelto desde la línea de comandos:
+
+```sh
+python3 src/sipi_ia.py "un programa que simule un cajero automático"
 ```
 
-Correlo con `sipi.bat mi_programa.sipi` (Windows) o `python3 sipi.py mi_programa.sipi` (Linux/Mac). Nada más que instalar Python.
+### Auto-corrección en loop (escribir → ejecutar → verificar → corregir)
 
-### De cero a tu primer programa corriendo, en 3 pasos
+Quinto modo del panel SiPi IA: **"Generar y auto-corregir (loop)"**.
+En vez de confiar en que la IA acertó a la primera, el sistema:
 
-1. Creá un archivo de texto llamado `hola.sipi` con esto adentro:
-   ```sipi
-   programa "Hola Mundo"
+1. Genera (o parte de) un programa.
+2. Lo **ejecuta de verdad** contra el motor real de `sipi.py` (en un
+   archivo temporal, con timeout).
+3. Si tira error, se lo pasa al modelo junto con el código para que lo
+   corrija.
+4. Repite hasta 4 veces o hasta lograr una ejecución limpia.
 
-   funcion saludar(nombre)
-       decir "Hola " + nombre
-   fin
+El panel muestra el progreso intento por intento (qué código se probó,
+si funcionó o no, y el error real si lo hubo), no solo el resultado
+final — para que se vea el proceso de corrección, no una caja negra.
+Implementado en `generar_con_auto_correccion()` dentro de
+`sipi_ia.py`, reutilizable fuera del editor (mismo patrón que ya usás
+en PiCi: escribir → ejecutar → corregir).
 
-   llamar saludar("Mundo")
-   ```
-2. Abrí una terminal en esa misma carpeta.
-3. Ejecutalo:
-   ```
-   $ python3 sipi.py hola.sipi
-   Hola Mundo
-   ```
-   (en Windows, `sipi.bat hola.sipi` en vez de `python3 sipi.py hola.sipi`).
+## SiPi IA Agente — para que otras IAs construyan software complejo en SiPi
 
-Eso es todo — no hay paso de compilación, ni configuración de proyecto, ni nada más que instalar antes (ver la sección de [Instalación](#instalación) más abajo si todavía no tenés SiPi puesto).
+Módulo nuevo: `src/sipi_ia_agente.py`. Es la capa que convierte a SiPi
+IA en **herramienta principal para otras IAs** (Claude Code, cualquier
+agente, cualquier script) que quieran construir software real y
+complejo en minutos, no solo generar un archivo suelto.
 
-**¿Preferís un editor con resaltado de sintaxis y autocompletado en vez de la terminal?** Abrilo con `editor.bat` (Windows) o `python3 editor_sipi.py` (Linux/Mac) — requiere `tkinter` (ver [Instalación](#instalación)).
+**Por qué hace falta esta capa además de `sipi_ia.py`:** un pedido
+complejo casi nunca es un archivo — es varios módulos con un plan
+detrás. La forma de resolver la complejidad no es pedirle a un modelo
+que genere todo de una sola pasada (ahí es donde a la mayoría de las
+IAs se les complica y empiezan a alucinar sintaxis o perder el
+contexto), sino **descomponerla**: planificar, generar cada parte por
+separado con su propia auto-corrección, y verificar la integración al
+final.
 
-**¿Querés ver los ejemplos ya hechos en vez de escribir el tuyo?** Corré cualquiera de los de la carpeta `ejemplos/`, por ejemplo: `python3 sipi.py ejemplos/hola_mundo.sipi`. El índice completo está en [`EXAMPLES.md`](EXAMPLES.md).
+**Flujo completo (`construir_proyecto`):**
 
----
+1. **Planificación** (`crear_plan`): antes de escribir código, le pide
+   al modelo un plan de qué archivos hacen falta y qué hace cada uno
+   — igual que un desarrollador senior diseña antes de programar.
+   Como SiPi no tiene sistema de `importar` entre archivos, el plan
+   está pensado para eso: dividir por responsabilidad, con
+   `principal.sipi` siempre como punto de entrada.
+2. **Construcción multi-archivo**: genera y auto-corrige cada archivo
+   del plan contra el motor real (reutilizando
+   `generar_con_auto_correccion` de `sipi_ia.py`), pasándole a cada
+   archivo nuevo el contexto de los que ya se generaron, para mantener
+   consistencia de estilo y nombres.
+3. **Verificación de integración**: al terminar, corre el
+   `principal.sipi` una vez más con todos los archivos del proyecto
+   ya en su lugar.
+4. Deja todo organizado en una carpeta de proyecto real, lista para
+   abrir en el editor.
 
-## ¿Por qué existe SiPi?
+**Interfaz de herramienta para otras IAs** (`ejecutar_comando_json` /
+modo CLI `--json`): cualquier agente externo puede invocar SiPi IA sin
+conocer la API interna de Python, con comandos estructurados y
+respuestas estructuradas — siempre JSON, nunca un traceback crudo:
 
-Casi todos los lenguajes que se usan para enseñar a programar (Python, JavaScript, C) tienen su sintaxis, sus palabras clave y sus mensajes de error en inglés. Para alguien que recién arranca — sobre todo en una escuela o facultad de habla hispana — eso agrega una barrera extra que no tiene nada que ver con aprender a programar: primero hay que traducir, después entender.
-
-SiPi saca esa barrera. Las palabras clave (`si`, `mientras`, `funcion`, `repetir`, `decir`), los mensajes de error y los ejemplos están en español desde el primer día. La idea no es reemplazar a Python — es ser el lenguaje en el que alguien piensa su primer programa, antes de pasar a lenguajes de propósito general.
-
-## ¿Qué problema resuelve?
-
-- **La barrera del idioma al aprender a programar.** El código se lee como una instrucción en español, no como un jeroglífico en inglés.
-- **La fricción de armar una interfaz gráfica, un juego o una página web desde cero.** En la mayoría de los lenguajes eso implica librerías externas, configuración y bastante código repetitivo antes de ver algo en pantalla. En SiPi, `ventana ... fin` o `crear_juego ... fin` son parte del lenguaje mismo.
-- **El miedo a "romper todo".** Los mensajes de error son en español y, si te equivocás escribiendo un comando, SiPi sugiere el nombre correcto (`¿Quisiste decir 'imprimir'?`).
-
-## ¿Para quién fue creado?
-
-- Estudiantes que están aprendiendo a programar por primera vez, en español.
-- Docentes que quieren un lenguaje sin barrera de idioma para introducir lógica de programación.
-- Cualquiera que quiera prototipar rápido una interfaz gráfica, un juego 2D simple o una página web sin escribir HTML/CSS a mano.
-
-**SiPi no está pensado** para reemplazar Python/JavaScript en un entorno profesional, ni para software de alto rendimiento (ver [cuándo NO conviene usar SiPi](#cuándo-no-conviene-usar-sipi) más abajo).
-
-### Filosofía: ¿para aprender, o de propósito general?
-
-Las dos cosas, pero en ese orden. La prioridad número uno de SiPi es bajar la barrera de entrada para aprender a programar en español — esa es la razón por la que existe. Al mismo tiempo, no es un lenguaje "de juguete" limitado a ejercicios de clase: tiene POO real, tipos opcionales, manejo de errores, persistencia, y puede armar aplicaciones con interfaz gráfica, juegos y sitios web de verdad, así que alguien puede quedarse en SiPi bastante más tiempo del que tardaría un lenguaje puramente educativo antes de sentir que "ya lo superó". Pero si tuvieras que elegir un solo eje para evaluar si una función nueva encaja en SiPi, es ese primero: ¿ayuda a que alguien sin experiencia previa entienda y programe más rápido?
-
----
-
-## ¿Qué puede hacer hoy?
-
-- Lo básico de cualquier lenguaje: variables, condicionales, bucles, funciones (con recursión real), manejo de errores propios, tipos opcionales, pattern matching (`seleccionar`/`caso`).
-- Programación orientada a objetos real: `clase`, herencia (`hereda_de`), interfaces (`implementa`), polimorfismo.
-- Listas, diccionarios, matrices y programación funcional (`lista_mapear`, `lista_filtrar`, `lista_reducir`).
-- Interfaces gráficas de escritorio (`ventana ... fin`, botones, listas, pestañas, barras de progreso) sin tocar tkinter directamente.
-- Juegos 2D con físicas, IA simple y partículas (`crear_juego ... fin`, sobre pygame).
-- Páginas web declarativas y un backend HTTP real (`pagina_web`, `iniciar_api_web`).
-- Persistencia real: JSON, CSV, y SQLite (`sqlite_conectar`, `sqlite_consultar`).
-- **Gestor de paquetes real, sin depender de un catálogo propio.** `instalar_modulo` baja un `.sipi` suelto por URL; `instalar_repositorio "usuario/repo"` clona un repositorio de GitHub completo con varios `.sipi`; `buscar_paquete "tema"` busca repos reales en GitHub (API pública, sin catálogo inventado); `instalar_dependencias` lee un manifiesto `sipi_paquetes.json` (equivalente a `package.json`) e instala todo de una. Ver [`PACKAGES.md`](PACKAGES.md).
-- Un editor visual propio, extensión de VS Code con resaltado de sintaxis y autocompletado, servidor LSP, depurador con "viaje en el tiempo", formateador de código, caché de bytecode (~7x más rápido en ejecuciones repetidas), y un compilador a `.exe`.
-- Suite de pruebas automatizadas (17 tests) que corre programas `.sipi` reales contra el motor.
-
-## ¿Qué no puede hacer todavía?
-
-- El gestor de paquetes no tiene un índice central curado tipo PyPI/npm — depende de que el paquete esté en un repo público de GitHub (lo cual cubre la gran mayoría de casos reales, pero no hay un catálogo oficial de "módulos recomendados").
-- El soporte 3D es básico (renderer de wireframes), no un motor 3D completo.
-- No hay instalador nativo para Linux/Mac tan pulido como el de Windows (`instalar.sh` existe pero es más nuevo y menos probado).
-- El LSP valida estructura de bloques y autocompleta comandos, pero todavía no valida la sintaxis interna de cada comando individual, ni tiene "ir a la definición".
-- Es un intérprete escrito en Python: el techo de rendimiento es el de Python, no el de un lenguaje compilado a nativo.
-
-## ¿Cuál es su objetivo?
-
-Que aprender a programar en español sea tan directo como aprender en inglés lo es hoy — y que ese primer programa, si el estudiante quiere, ya pueda tener una ventana, un botón y algo pasando en pantalla, no solo texto en una consola.
-
----
-
-## Instalación
-
-**Windows:**
-1. Descomprimí el ZIP en una carpeta (ej. `C:\SiPi`).
-2. Doble clic en `instalar.bat` (revisa Python, instala `pygame`, `pyinstaller`, `Pillow`).
-3. Ejecutá con `sipi.bat mi_programa.sipi`, o abrí el editor visual con `editor.bat`.
-
-**Linux / macOS:**
-```bash
-python3 sipi.py mi_programa.sipi
-python3 editor_sipi.py   # requiere tkinter
+```sh
+python3 src/sipi_ia_agente.py --json '{
+  "accion": "construir_proyecto",
+  "objetivo": "un sistema de biblioteca con prestamos, devoluciones y multas por atraso",
+  "carpeta": "/ruta/al/proyecto"
+}'
 ```
 
-Requisito: Python 3.10+.
+Acciones soportadas: `generar_codigo`, `corregir_error`,
+`auto_corregir`, `construir_proyecto`, `optimizar_codigo`,
+`generar_pruebas`, `diagnosticar_error`, `crear_plan`. Cada una
+devuelve `{"ok": true/false, ...}` con el detalle correspondiente.
 
-## Tabla de características
+**Capacidades adicionales** pensadas para que programar en SiPi con
+ayuda de IA sea más completo, no solo más rápido:
 
-| Característica | Estado |
-|---|---|
-| Variables, condicionales, bucles, funciones | ✅ |
-| Recursión real | ✅ |
-| POO real (clases, herencia, interfaces, polimorfismo) | ✅ |
-| Tipos opcionales, pattern matching, manejo de errores | ✅ |
-| GUI de escritorio (`ventana`) | ✅ |
-| Juegos 2D (`crear_juego`) | ✅ |
-| Editor visual (arrastrar y tocar para editar, ver `ventana`/`pagina_web`/`crear_juego`) | ✅ |
-| Páginas web y backend HTTP | ✅ |
-| SQLite / JSON / CSV | ✅ |
-| Gestor de paquetes (vía GitHub, ver `PACKAGES.md`) | ✅ |
-| Editor con resaltado y autocompletado propio | ✅ |
-| Corrector automático de errores tipográficos (`--corregir`) | ✅ |
-| Revisor de código: bugs, seguridad, estilo (`--revisar`) | ✅ |
-| REPL interactivo (`--repl`) | ✅ |
-| CLI con subcomandos (`sipi ejecutar/repl/depurar/analizar/...`) | ✅ |
-| Concurrencia real (`hilo_crear`, `con_bloqueo`) | ✅ (cada hilo con su propia copia de variables, ver `KNOWN_ISSUES.md`) |
-| Extensión de VS Code | ✅ |
-| LSP (resaltado/autocompletado en cualquier editor compatible) | 🧪 (valida bloques y nombres de comando; todavía no valida sintaxis interna de cada comando ni tiene "ir a la definición" — ver `KNOWN_ISSUES.md`) |
-| Depurador con viaje en el tiempo | ✅ |
-| Compilación a ejecutable (`.exe`/binario) | ✅ |
-| CI automatizado (tests en cada cambio) | ✅ |
-| Índice curado de paquetes | ❌ (pendiente, ver Roadmap) |
-| 3D | 🧪 (wireframe básico, no un motor 3D completo) |
+- `optimizar_codigo`: reescribe un programa que ya funciona para que
+  quede más prolijo (nombres claros, sin repetición), sin tocar el
+  comportamiento.
+- `generar_pruebas`: como SiPi no tiene framework de testing propio,
+  genera un segundo programa SiPi que ejercita al primero con varios
+  casos y reporta "OK"/"FALLO" comparando resultado esperado vs.
+  obtenido.
+- `diagnosticar_y_explicar_error`: separa diagnóstico de corrección —
+  para cuando lo que hace falta es entender la causa del error, no
+  necesariamente reescribir código todavía.
 
-| Plataforma | Estado | Notas |
-|---|---|---|
-| Windows 10/11 | ✅ | Instalador (`instalar.bat`), `.bat` para todo, la más probada |
-| Linux | ✅ | Instalador (`instalar.sh`), probado en Ubuntu/Debian y Arch. `tkinter` (para el editor visual) hay que instalarlo aparte con el gestor de paquetes de tu distro |
-| macOS | 🧪 | Corre igual que Linux (`instalar.sh` funciona ahí también), pero con menos testing real que Windows/Linux |
-| Android | 🧪 | Experimental, vía Kivy (`generar_apps`) |
+**Panel en el editor grande**: botón "Construir proyecto completo
+(multi-archivo)" dentro del panel de SiPi IA (`Ctrl+I`), con el plan,
+el progreso de cada archivo (intentos de auto-corrección incluidos) y
+la verificación de integración mostrados en vivo.
 
-## ¿Por qué la primera versión pública es tan alta (v31+)?
+## SiPi IA — sesiones conversacionales con memoria
 
-Las versiones anteriores a la v31 corresponden al desarrollo interno y privado del proyecto — la primera versión publicada no representa el inicio histórico del desarrollo, sino el punto en el que se decidió abrirlo. El changelog completo, versión por versión, está en [`CHANGELOG.md`](CHANGELOG.md).
+Nueva clase `SesionIA` en `sipi_ia.py`: hasta ahora cada pedido a la
+IA era una unidad aislada (descripción → código). Programar de verdad
+es iterativo — "hacelo", después "agregale esto", después "cambiale el
+nombre a esa variable" — y cada pedido nuevo necesita el CONTEXTO
+COMPLETO de lo que se discutió antes, no solo el último mensaje.
 
-## ¿Interpretado o compilado? ¿Multiplataforma? ¿Open source?
+- `sesion.pedir(mensaje)` manda el historial completo de la
+  conversación (hasta 20 mensajes de contexto) en cada vuelta, y
+  siempre devuelve el programa completo actualizado, no un fragmento.
+- `auto_verificar=True` ejecuta el resultado contra el motor real y,
+  si falla, pide una corrección extra antes de devolverlo.
+- `sesion.deshacer()` vuelve a la versión de código anterior sin
+  perder la memoria de la conversación (la IA sigue sabiendo que el
+  usuario decidió volver atrás).
+- `sesion.exportar()` / `SesionIA.desde_exportado()`: la conversación
+  se puede guardar y continuar después — no se pierde al cerrar el
+  editor.
+- Integrada en `sipi_ia_agente.py` como acción `sesion_pedir`, con
+  persistencia automática en disco (`.sipi_sesion_<id>.json` dentro de
+  la carpeta del proyecto), así una IA externa puede mantener una
+  conversación de refinamiento a lo largo de varias invocaciones
+  separadas del CLI, cada una un comando JSON independiente.
 
-- **Interpretado.** `sipi.py` lee y ejecuta un archivo `.sipi` directamente. También existe una caché de bytecode propia (`.sipic`) que acelera ejecuciones repetidas del mismo archivo (no confundir con compilación a nativo).
-- **Compilable a ejecutable.** `generar_exe.py` empaqueta un programa `.sipi` en un `.exe`/binario standalone usando PyInstaller — no requiere que quien lo reciba tenga Python instalado.
-- **Multiplataforma en su núcleo** (Windows, Linux, macOS, ya que corre sobre Python), con soporte experimental para Android vía Kivy. `instalar.bat` (Windows) e `instalar.sh` (Linux/Mac) hacen las mismas comprobaciones reales (Python, pip, dependencias) y no dicen "completado" si algo falló — ver la tabla de plataformas más arriba para el detalle fino de qué está más probado en cada una.
-- **Código abierto** para desarrollo. Existe además un modo "protegido" (`proteger_codigo.py`) para cuando alguien quiere distribuir una app hecha en SiPi sin exponer el intérprete completo — pensado para publicar proyectos de terceros, no para ocultar el lenguaje en sí.
+## SiPi IA — memoria e índice de proyecto (`sipi_ia_memoria.py`)
 
-## Comparación rápida
+Para que el agente maneje proyectos grandes sin tener que reenviar
+todo el código de todos los archivos en cada pedido (caro, lento, y en
+proyectos grandes ni siquiera entra en el contexto):
 
-| | SiPi | Python | JavaScript | Lua |
-|---|---|---|---|---|
-| Palabras clave | Español | Inglés | Inglés | Inglés |
-| Curva de entrada | Muy baja | Baja | Media | Baja |
-| GUI de escritorio integrada al lenguaje | Sí (`ventana`) | No (requiere tkinter aparte) | No | No |
-| Motor de juegos 2D integrado | Sí (`crear_juego`) | No (requiere pygame aparte) | No (requiere librería) | No (requiere Love2D) |
-| Ecosistema de paquetes | Incipiente | Enorme (PyPI) | Enorme (npm) | Chico |
-| Rendimiento | El de Python (más caché de bytecode propia) | Referencia | Más rápido (V8) | Más rápido |
-| Uso recomendado | Aprender a programar en español, prototipos rápidos | Propósito general, producción | Web, producción | Scripting embebido, juegos |
+- **`IndiceProyecto`**: analiza todos los `.sipi` de una carpeta con
+  regex livianas (sin gastar API) para extraer funciones, clases y
+  variables globales de cada archivo, con cache en disco por hash de
+  contenido — solo se re-analiza lo que cambió de verdad. Opcionalmente
+  puede pedirle a la IA un resumen de una línea por archivo, también
+  cacheado.
+- **`contexto_resumido()`**: versión compacta del índice para pasarle
+  a un prompt en vez del código completo — suficiente para que el
+  modelo sepa qué hay en el proyecto antes de tocar un archivo puntual.
+  `construir_proyecto` deja el proyecto indexado automáticamente al
+  terminar.
+- **`buscar(termino)`**: responde preguntas tipo "¿en qué archivo está
+  la función que calcula el descuento?" sin mandarle el proyecto
+  entero al modelo — busca en funciones, clases, variables globales,
+  resúmenes y contenido de texto.
+- **`renombrar_en_proyecto()`**: refactor real entre archivos —
+  renombra una variable/función de forma consistente en todos los
+  `.sipi` del proyecto a la vez, con reemplazo de palabra completa.
+  Soporta **vista previa** (`aplicar=False`) antes de tocar nada.
+- **`verificar_proyecto_completo()`**: corre todos los archivos del
+  proyecto contra el motor real y devuelve el estado de cada uno — útil
+  después de un refactor o un cambio grande, para saber de un vistazo
+  si algo se rompió sin abrir archivo por archivo.
+- Todo esto también expuesto como acciones del comando JSON del
+  agente: `indexar_proyecto`, `buscar_en_proyecto`,
+  `renombrar_en_proyecto`, `verificar_proyecto`.
+- **Panel nuevo en el editor**: botón "Buscar / Refactor en el
+  proyecto" dentro del panel de construcción multi-archivo, con
+  pestañas de Buscar y Renombrar (esta última con vista previa
+  obligatoria antes de aplicar, y confirmación explícita).
 
-## Cuándo NO conviene usar SiPi
+## SiPi IA — biblioteca de patrones (`sipi_ia_biblioteca.py`)
 
-- Si el objetivo final es conseguir trabajo como programador: en ese caso conviene aprender la lógica acá si ayuda, pero el destino final debería ser Python/JavaScript/lo que pida el mercado.
-- Software que necesita rendimiento serio (procesamiento pesado, tiempo real estricto, miles de usuarios concurrentes): SiPi hereda el techo de rendimiento de Python.
-- Proyectos que dependen de un ecosistema de librerías maduro: el de SiPi todavía es chico.
-- Equipos grandes con necesidad de herramientas de tipado estricto, tooling corporativo, CI/CD complejo, etc.: la base ahí es más sólida en lenguajes establecidos.
+Acelera la generación y mejora la consistencia reutilizando soluciones
+que **ya se verificaron que funcionan**, en vez de generar todo desde
+cero cada vez:
 
----
+- Cuando `construir_proyecto` genera un archivo con éxito, lo guarda
+  automáticamente en una biblioteca compartida (persistente en
+  `~/.config/sipi/sipi_ia_biblioteca.json`, entre proyectos distintos,
+  no solo dentro de uno).
+- Antes de generar un archivo nuevo, busca soluciones parecidas por
+  palabras clave (coeficiente de Jaccard) — con un **stemming simple
+  por truncamiento** para que conjugaciones distintas de una misma
+  raíz matcheen entre sí (`validar`/`valida`/`validando` → `valid`),
+  sin depender de ningún modelo de embeddings ni librería externa.
+- Si encuentra una coincidencia fuerte, la usa como punto de partida
+  para que el modelo la **adapte** al pedido nuevo, en vez de
+  reinventar la rueda — más rápido, más barato, y con estilo
+  consistente entre programas parecidos.
+- Poda automática: si se acumulan más de 300 soluciones, descarta
+  primero las menos usadas y más viejas, no solo por antigüedad.
+- Expuesta como acciones `buscar_patrones` y `estadisticas_biblioteca`
+  en el comando JSON del agente.
 
-## Documentación
+## SiPi IA — evaluación de calidad de código
 
-| Documento | Para qué sirve |
-|---|---|
-| [`DOCUMENTACION.md`](DOCUMENTACION.md) | Guía de instalación, tutorial completo desde cero, guía de sintaxis y referencia de comandos |
-| [`LANGUAGE_SPEC.md`](LANGUAGE_SPEC.md) | Especificación del lenguaje: gramática, tipos, semántica |
-| [`SYNTAX.md`](SYNTAX.md) | Referencia rápida de sintaxis (bloques, comentarios, expresiones) |
-| [`FUNCTIONS.md`](FUNCTIONS.md) | Referencia de todos los comandos, como una tabla de funciones |
-| [`EXAMPLES.md`](EXAMPLES.md) | Índice de los ejemplos en `ejemplos/`, organizados por categoría |
-| [`PACKAGES.md`](PACKAGES.md) | Cómo funciona el gestor de paquetes real de SiPi (`instalar_modulo`, `instalar_repositorio`, `buscar_paquete`, `sipi_paquetes.json`) |
-| [`GLOSSARY.md`](GLOSSARY.md) | Terminología internacional: qué nombre tiene en inglés cada concepto de SiPi (`lambda`, `closure`, `callback`, etc.) |
-| [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md) | Problemas y limitaciones conocidas, para no reportar algo que ya sabemos |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Cómo reportar bugs, sugerir funciones, y contribuir código |
-| [`AI_GUIDE.md`](AI_GUIDE.md) | Guía para que un asistente de IA (ChatGPT, Claude, etc.) entienda y genere código SiPi correctamente |
-| [`PROMPTS.md`](PROMPTS.md) | Prompts ya armados para pedirle código SiPi a un asistente de IA |
-| [`CHANGELOG.md`](CHANGELOG.md) | Historial completo de versiones |
+`evaluar_calidad()` y `generar_con_calidad_garantizada()` en
+`sipi_ia_agente.py`. `generar_con_auto_correccion` solo garantiza que
+un programa **corra** sin error — pero correr sin error no significa
+estar bien escrito. Este sistema reutiliza el **analizador estático
+real que ya trae SiPi** (`sipi.py --revisar`, con categorías
+seguridad/bugs/estilo/sugerencias) para calcular un puntaje objetivo
+de 0 a 100 (ponderado: los hallazgos de seguridad penalizan mucho más
+que uno de estilo), sin gastar ninguna llamada a la API — es análisis
+estático local e instantáneo.
 
-## Roadmap
+`generar_con_calidad_garantizada()` combina ambos mundos: primero
+logra que el programa corra (auto-corrección de ejecución), y si el
+puntaje de calidad queda por debajo de un mínimo configurable, le pide
+al modelo que resuelva específicamente los hallazgos de seguridad y
+bugs (no los de estilo, esos quedan a criterio) — revalidando siempre
+contra el motor real antes de aceptar el arreglo, para que "mejorar la
+calidad" nunca rompa "que funcione". `construir_proyecto` ya calcula y
+reporta el puntaje de calidad de cada archivo que genera.
 
-**Ya hecho:** editor visual, intérprete, compilador a ejecutable, GUI de escritorio, motor de juegos 2D, POO real, tipos opcionales, pattern matching, LSP, extensión de VS Code, depurador con viaje en el tiempo, caché de bytecode, runtime móvil (Android/Kivy).
+Acciones nuevas en el comando JSON: `evaluar_calidad`,
+`generar_con_calidad`.
 
-**Pendiente:**
-- [ ] Más testing real en macOS (el instalador y el intérprete deberían andar igual que en Linux, pero con menos casos probados)
-- [ ] Catálogo/índice oficial curado de módulos recomendados (hoy el descubrimiento es vía `buscar_paquete` sobre GitHub, sin curaduría)
-- [ ] Módulos oficiales mantenidos por el proyecto
-- [ ] LSP: validación de sintaxis interna por comando, "ir a la definición"
-- [ ] Publicación directa de sitios generados a internet (hosting con un clic)
-- [ ] Importaciones entre archivos `.sipi` más maduras
-- [ ] Mejoras de IA integradas al editor (sugerencias contextuales)
+## SiPi IA — servidor HTTP (`sipi_ia_servidor.py`)
 
-## Licencia
+Todo lo anterior también accesible por **red**, no solo por CLI —
+pensado para el caso en que quien va a usar SiPi IA como herramienta
+principal es un agente de IA remoto o un panel que habla HTTP en vez
+de lanzar procesos. Implementado con `http.server` de la biblioteca
+estándar — sin Flask, sin dependencias:
 
-Propietaria — todos los derechos reservados. Solo el autor puede redistribuir el intérprete/código fuente de SiPi. Ver [`LICENSE`](LICENSE) para el texto completo.
-
-Nota: eso no impide que uses SiPi para hacer y distribuir tus propios programas — un `.sipi` que escribís vos, o un `.exe` que compilás con `generar_exe.py`, son tuyos y los repartís como quieras. La restricción es sobre el lenguaje/intérprete en sí, no sobre lo que la gente construya con él.
-
-## Estructura del proyecto
-
+```sh
+python3 src/sipi_ia_servidor.py --puerto 8420
 ```
-SiPi/
-├── sipi.py                 <- el intérprete (motor real del lenguaje)
-├── sipi.bat / sipi_cli.py   <- ejecutar archivos .sipi
-├── editor_sipi.py            <- editor visual
-├── generar_exe.py             <- compilador a .exe
-├── sipi_lsp.py                 <- servidor LSP
-├── vscode-sipi/                 <- extensión de VS Code
-├── tests/                        <- suite de pruebas automatizadas
-├── instalar.bat / instalar.sh
-├── ejemplos/                      <- programas de ejemplo (ver EXAMPLES.md)
-├── README.md                       <- este archivo
-├── DOCUMENTACION.md
-├── CHANGELOG.md
-├── LANGUAGE_SPEC.md
-├── SYNTAX.md
-├── FUNCTIONS.md
-├── EXAMPLES.md
-├── AI_GUIDE.md
-└── PROMPTS.md
+
+- `GET /salud` — chequeo simple de que el servidor está arriba.
+- `GET /acciones` — catálogo de acciones disponibles con descripción,
+  para que un agente que recién se conecta pueda "descubrir" qué puede
+  pedir sin leer el código fuente.
+- `POST /comando` — el mismo formato JSON del CLI del agente; devuelve
+  HTTP 200 si `ok: true`, 422 si `ok: false` (nunca un traceback
+  crudo).
+- Por defecto escucha solo en `127.0.0.1` (esta misma computadora). Si
+  se expone a la red con `--host 0.0.0.0`, exige (y avisa si falta) un
+  `--token` que el cliente manda en el header `X-SiPi-Token` — sin
+  eso, cualquiera en esa red podría gastar la clave de API configurada.
+- **Panel en el editor**: botón "Servidor para otras IAs" en el panel
+  de SiPi IA, para prender/apagar el servidor sin salir de la app, con
+  generación automática de un token seguro (`secrets.token_hex`)
+  cuando se habilita el acceso desde la red.
+
+Probado en vivo end-to-end: `/salud`, `/acciones`, y `/comando` con y
+sin clave de API configurada — responde siempre JSON estructurado con
+el código HTTP correcto.
+
+## SiPi Kids
+
+Editor nuevo y completamente aparte: `src/editor_sipi_kids.py`.
+Pensado para chicos o para cualquiera que recién arranca, sin tener
+que memorizar sintaxis:
+
+- **Paleta de bloques** (panel izquierdo, con íconos propios en
+  `src/iconos_kids/`): Inicio, Decir algo, Preguntar y guardar, Número
+  al azar, Si pasa esto..., Repetir varias veces, Lista de cosas. Cada
+  bloque es un botón grande y colorido que inserta el fragmento de
+  código SiPi correcto justo donde está el cursor, dejando el cursor
+  listo en el lugar donde el chico tiene que completar el dato (el
+  texto, la condición, la cantidad de veces).
+- El área de código sigue siendo texto real y editable — no es un
+  simulador aparte — y corre con el mismo motor `sipi.py` que el
+  editor grande.
+- Botón **¡Ejecutar!** gigante: en Linux/Mac corre el programa
+  capturando la salida y mostrándola directo en un panel de
+  "Resultado" al costado (sin tener que abrir una terminal aparte); si
+  hay un error, se explica con un tono simple y se sugiere probar de
+  nuevo o pedir ayuda a la IA.
+- **Ayuda de la IA** simplificada: una sola caja de texto ("contá qué
+  querés que haga tu programa") + un botón. Reutiliza `sipi_ia.py`
+  con un prompt adaptado a alguien que recién empieza (código simple
+  y comentado).
+- El nivel de dificultad queda fijo en `#nivel principiante` (la
+  directiva real que ya entiende `sipi.py`), así el propio intérprete
+  avisa con mensajes claros si se usa algo más avanzado, en vez de un
+  error técnico.
+- Tipografía grande (Comic Sans MS), colores vivos, sin atajos de
+  teclado que aprender ni menús escondidos.
+
+Se abre como programa aparte:
+
+```sh
+python3 src/editor_sipi_kids.py
 ```
 
-— NovaLab Corporation
+## Sistema de logros (SiPi Kids)
+
+Módulo nuevo y separado, `src/logros_kids.py` — gamificación real y
+persistente, no cosmética:
+
+- **Progreso persistente**: se guarda en
+  `~/.config/sipi/sipi_kids_progreso.json`, así los logros y
+  estadísticas sobreviven entre sesiones.
+- **9 logros** en el catálogo inicial, cada uno con una condición
+  declarativa (una función que mira las estadísticas acumuladas, no un
+  contador hardcodeado disperso por el código): primer programa,
+  primer guardado, uso de cada tipo de bloque, 5 ejecuciones seguidas
+  sin error, 10 programas en total, primer pedido a la IA, 25 usos de
+  bloques, y la colección completa de tipos de bloque.
+- **API independiente de la interfaz** (`registrar_evento(tipo,
+  **datos)` devuelve la lista de logros nuevos desbloqueados), para
+  poder reusarse si el editor grande o algún otro front-end quiere
+  engancharse más adelante.
+- **Notificaciones emergentes**: ventanita sin bordes arriba a la
+  derecha que aparece 4 segundos al desbloquear un logro, sin
+  interrumpir al chico en medio de escribir el programa.
+- **Botón "Mis logros"**: vitrina con el catálogo completo — los
+  logros ya conseguidos se muestran en color con su descripción; los
+  que faltan se muestran en gris con ícono de candado y "???", para
+  que se note que hay más por descubrir sin arruinar la sorpresa.
+- Eventos ya enganchados en `editor_sipi_kids.py`: usar un bloque,
+  ejecutar (con o sin error, incluyendo la racha), guardar un archivo,
+  y pedirle algo a la Ayuda de la IA.

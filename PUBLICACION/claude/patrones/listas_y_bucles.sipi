@@ -1,0 +1,14 @@
+programa "Menu de opciones (demo)"
+
+variable opciones = ["Saludar", "Sumar", "Salir"]
+variable indice = 0
+repetir 3 veces
+    decir "Opcion: {opciones[indice]}"
+    variable indice = indice + 1
+fin
+
+funcion sumar(a, b)
+    devolver a + b
+fin
+
+decir "Ejemplo de suma: {sumar(4, 6)}"

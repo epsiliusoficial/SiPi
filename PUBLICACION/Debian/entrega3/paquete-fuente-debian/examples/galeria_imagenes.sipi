@@ -1,8 +1,0 @@
-programa "Galeria simple con imagenes reales en ventanas"
-
-ventana "SiPi - Galeria" 500 400
-    etiqueta "Galeria de imagenes (coloca tus .png o .jpg junto al programa)" 20 15
-    imagen "foto1.png" 30 60
-    imagen "foto2.png" 260 60 180 180
-    etiqueta "La segunda imagen se redimensiono a 180x180" 30 280
-fin

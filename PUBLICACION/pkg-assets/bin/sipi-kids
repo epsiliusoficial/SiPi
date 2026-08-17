@@ -1,0 +1,4 @@
+#!/bin/sh
+# Wrapper del editor infantil de SiPi (bloques por clic, requiere python3-tk).
+export PYTHONDONTWRITEBYTECODE=1
+exec python3 /usr/share/sipi/editor_sipi_kids.py "$@"

@@ -1,5 +1,0 @@
-programa "Crear y publicar un sitio web real localmente"
-
-generar_pagina_web "NovaLabSitio"
-decir "Sitio generado. Iniciando servidor web local..."
-iniciar_servidor_web "NovaLabSitio_web" 8000

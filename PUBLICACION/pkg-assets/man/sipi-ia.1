@@ -1,0 +1,42 @@
+.TH SIPI\-IA 1 "2026-08-15" "SiPi 41.24.0" "SiPi User Manual"
+.SH NAME
+sipi\-ia \- asistente de IA para generar, corregir y construir proyectos SiPi
+.SH SYNOPSIS
+.B sipi-ia
+\-\-json \fICOMANDO_JSON\fR
+.br
+.B sipi-ia
+\-\-objetivo \fI"descripcion del proyecto"\fR [\-\-carpeta \fIRUTA\fR]
+.SH DESCRIPTION
+.B sipi\-ia
+es la herramienta de linea de comandos de SiPi IA Agente: pensada para
+que otra IA (o un script) la use como herramienta principal para
+programar en SiPi, sin conocer la API interna de Python.
+.PP
+Con
+.B \-\-json
+acepta un comando estructurado y devuelve un resultado estructurado,
+siempre en JSON, con codigo de salida 0 si \fBok\fR es verdadero y 1 en
+caso contrario. Acciones soportadas: \fBgenerar_codigo\fR,
+\fBcorregir_error\fR, \fBauto_corregir\fR, \fBconstruir_proyecto\fR,
+\fBoptimizar_codigo\fR, \fBgenerar_pruebas\fR, \fBdiagnosticar_error\fR,
+\fBcrear_plan\fR, \fBindexar_proyecto\fR, \fBbuscar_en_proyecto\fR,
+\fBrenombrar_en_proyecto\fR, \fBverificar_proyecto\fR, \fBsesion_pedir\fR,
+\fBbuscar_patrones\fR, \fBestadisticas_biblioteca\fR,
+\fBevaluar_calidad\fR, \fBgenerar_con_calidad\fR.
+.PP
+Requiere una clave de API de Anthropic, definida en la variable de
+entorno
+.B ANTHROPIC_API_KEY
+o guardada previamente desde el editor grande (boton "SiPi IA").
+.SH EXAMPLES
+.nf
+sipi-ia --json '{"accion":"generar_codigo","descripcion":"una calculadora de IVA"}'
+sipi-ia --objetivo "un sistema de biblioteca con prestamos y multas" --carpeta ./mi-proyecto
+.fi
+.SH SEE ALSO
+.BR sipi (1),
+.BR sipi\-editor (1),
+.BR sipi\-ia\-servidor (1)
+.SH AUTHOR
+Mateo \(em NovaLab Corporation.

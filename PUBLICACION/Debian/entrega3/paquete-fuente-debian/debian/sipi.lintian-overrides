@@ -1,5 +1,0 @@
-# "autor" es espanol correcto (no un typo de "author" en ingles) -- todo
-# el texto de debian/copyright y debian/changelog esta en espanol a
-# proposito, igual que el resto de la documentacion del proyecto.
-spelling-error-in-copyright autor author
-spelling-error-in-changelog autor author [usr/share/doc/sipi/changelog.Debian.gz]

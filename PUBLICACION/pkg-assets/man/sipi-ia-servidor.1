@@ -1,0 +1,34 @@
+.TH SIPI\-IA\-SERVIDOR 1 "2026-08-15" "SiPi 41.24.0" "SiPi User Manual"
+.SH NAME
+sipi\-ia\-servidor \- servidor HTTP de SiPi IA para otras IAs/herramientas
+.SH SYNOPSIS
+.B sipi-ia-servidor
+[\-\-host \fIHOST\fR] [\-\-puerto \fIPUERTO\fR] [\-\-token \fITOKEN\fR]
+.SH DESCRIPTION
+Expone
+.BR sipi\-ia (1)
+como una API HTTP, para cuando quien va a usar SiPi IA como
+herramienta principal es un agente de IA remoto o un panel que habla
+HTTP en vez de lanzar procesos. Implementado unicamente con la
+biblioteca estandar de Python (sin dependencias externas).
+.PP
+Por defecto escucha solo en 127.0.0.1 (esta misma computadora). Si se
+expone con
+.B \-\-host 0.0.0.0
+se recomienda encarecidamente pasar tambien
+.B \-\-token\fR,
+que el cliente debe mandar en el header \fBX\-SiPi\-Token\fR.
+.SH ENDPOINTS
+.TP
+.B GET /salud
+Chequeo de que el servidor esta arriba.
+.TP
+.B GET /acciones
+Catalogo de acciones disponibles con descripcion.
+.TP
+.B POST /comando
+El mismo formato JSON que \fBsipi\-ia \-\-json\fR.
+.SH SEE ALSO
+.BR sipi\-ia (1)
+.SH AUTHOR
+Mateo \(em NovaLab Corporation.

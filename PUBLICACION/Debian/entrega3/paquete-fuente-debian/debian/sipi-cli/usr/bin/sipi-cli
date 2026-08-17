@@ -1,4 +1,0 @@
-#!/bin/sh
-# Wrapper de la CLI profesional de SiPi (gestion de proyectos, tests, etc).
-export PYTHONDONTWRITEBYTECODE=1
-exec python3 /usr/share/sipi/sipi_cli.py "$@"

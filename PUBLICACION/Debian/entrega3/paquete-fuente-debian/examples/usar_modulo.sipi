@@ -1,9 +1,0 @@
-programa "Uso de modulos con importar"
-
-importar "modulo_utilidades.sipi"
-
-decir "Version del modulo: {version_modulo}"
-llamar saludar_desde_modulo("Mateo")
-
-llamar_valor es_par(0) -> resultado_par
-decir "es_par(0) devolvio: {resultado_par}"

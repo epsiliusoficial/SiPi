@@ -1,0 +1,1 @@
+{"version_sipi": "41.24.0", "tamano": 193, "hash": "403e69d16d3ab0d5a6c62783882768958d266b9e8f5bdc1f11b07395fced4782", "lineas": [[1, "programa \"Crear y publicar un sitio web real localmente\""], [2, ""], [3, "generar_pagina_web \"NovaLabSitio\""], [4, "decir \"Sitio generado. Iniciando servidor web local...\""], [5, "iniciar_servidor_web \"NovaLabSitio_web\" 8000"], [6, ""]]}

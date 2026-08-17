@@ -1,0 +1,53 @@
+programa "Nombre del programa"
+
+variable x = 10                    // sin tipo
+variable y: entero = 20            // con tipo (opcional)
+const MI_CONSTANTE = 3.14159
+
+decir "Texto con {x} interpolado"
+variable y_respuesta = preguntar "Pregunta: "
+
+si x > 5
+    decir "mayor"
+sino
+    decir "menor"
+fin
+
+repetir 5 veces
+    decir "hola"
+fin
+
+mientras x > 0
+    variable x = x - 1
+fin
+
+variable milista = [1, 2, 3]
+para_cada elemento en milista
+    decir elemento
+fin
+
+funcion sumar(a, b)
+    devolver a + b
+fin
+
+decir "Suma: {sumar(2, 3)}"
+
+intentar
+    // ...
+capturar error
+    decir "Error: {error}"
+fin
+
+clase Animal
+    nombre = ""
+fin
+
+clase Perro hereda_de Animal
+    metodo hacer_sonido()
+        devolver "Guau!"
+    fin
+fin
+
+nuevo Perro() -> rex
+llamar_metodo rex "hacer_sonido"() -> sonido
+decir "El perro dice: {sonido}"

@@ -1,7 +1,0 @@
-#!/bin/sh
-set -eu
-echo "== sipi-cli: comando disponible globalmente =="
-command -v sipi-cli
-echo "== man sipi-cli =="
-man -w sipi-cli > /dev/null
-echo "OK: todos los checks de sipi-cli pasaron"
